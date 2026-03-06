@@ -6,9 +6,9 @@
 
 ---
 
-**Document Version:** 2.0
-**Date:** 2026-03-05
-**Status:** Final Draft
+**Document Version:** 4.0
+**Date:** 2026-03-06
+**Status:** Final
 **Classification:** Internal
 
 ---
@@ -148,7 +148,7 @@ Vastrayug embodies three archetypes:
 - Nebula Gold `#C9A84C` is the accent — never the base. Used for logo, highlights, CTAs, dividers.
 - Stardust White `#F4F1EC` for body text, contrast, and negative space.
 - Deep Indigo `#1B1640` for secondary sections, cards, and hover states.
-- Each Navagraha planetary collection page may use its dedicated accent palette layered on the primary palette, but Cosmic Black + Nebula Gold must always remain as anchors.
+- Each Navagraha planetary collection page uses the **primary palette (Cosmic Black + Nebula Gold) as the anchor**, with a subtle planet-specific accent colour layered on top (per the Navagraha colour reference in Appendix A). This preserves brand cohesion while giving each planet a distinct, recognisable visual identity.
 
 #### 4.4 Typography
 - **Headings:** Elegant serif or stylised font — conveys premium, timeless identity.
@@ -172,6 +172,7 @@ The hero section of the landing page features an **animated, revolving solar sys
   - *"Fashion Written in the Stars."*
   - *"Your ruling planet chose you. Now wear it."*
 - Animation must be performant — 60 fps on mid-range devices; graceful degradation on low-end devices (static fallback image).
+- **Implementation:** Pure CSS animations — chosen for lightweight performance, fast load times, and zero JS dependency overhead.
 - CTA button directing users to explore collections or shop.
 - The banner sets the tone for the entire site: cosmic, premium, alive.
 
@@ -265,8 +266,8 @@ Home (Solar System Banner + Featured Collections + Brand Story)
 
 #### 6.4 Payment
 
-- Integration with payment gateway (Razorpay / Stripe — to be decided).
-- Support for: credit/debit cards, UPI, net banking, wallets (based on gateway).
+- Integration with **Razorpay** payment gateway.
+- Support for: credit/debit cards, UPI, net banking, wallets.
 - Secure payment flow — PCI-compliant via gateway's hosted/tokenised checkout.
 - Order confirmation page and email upon successful payment.
 - Failed payment handling with retry option.
@@ -275,13 +276,14 @@ Home (Solar System Banner + Featured Collections + Brand Story)
 
 - Users track order status from their account dashboard.
 - Status stages: **Order Placed → Processing → Shipped → Out for Delivery → Delivered**.
-- Tracking number and shipping provider displayed once shipped.
-- Integration with shipping provider APIs for real-time tracking (future phase).
-- Email/SMS notifications at each status change.
+- Tracking number, shipping provider name, and tracking website link entered manually by admin per order.
+- No automated shipping provider API integration at launch — admin updates tracking details through the order management panel.
+- Integration with shipping provider APIs for real-time tracking (future phase — Phase 5).
+- Email/SMS notifications (via Twilio) at each status change.
 
 #### 6.6 User Accounts
 
-- Registration: email + password; optional social login (future phase).
+- Registration: email + password; social login via **Google and Facebook** (Phase 4).
 - Login / Logout / Forgot Password.
 - Profile management: name, email, phone, saved addresses.
 - Order history with reorder capability.
@@ -299,7 +301,7 @@ Home (Solar System Banner + Featured Collections + Brand Story)
 #### 6.8 Newsletter
 
 - Email subscription form in footer and optionally in pop-ups.
-- Integration with email service (Mailchimp / SendGrid — to be decided).
+- Integration with **SendGrid** for email delivery.
 - Subscription triggers `Lead` event for Meta Pixel.
 
 ---
@@ -373,6 +375,7 @@ The admin panel is the operational backbone. It must be intuitive, fast, and giv
 - Add tracking number and shipping provider.
 - Print invoice / packing slip.
 - Refund processing (mark as refunded, notes field).
+- **Exchange Policy:** Vastrayug operates an exchange-only policy — no returns. Order management flow supports exchange requests: admin can create a new order linked to the original, mark original as exchanged, and track the replacement shipment.
 
 #### 8.5 User Management
 - View all registered users with search and filters (name, email, registration date, order count).
@@ -524,23 +527,24 @@ The admin panel is the operational backbone. It must be intuitive, fast, and giv
 |-------|-----------|-----------|
 | **Frontend** | Next.js (React) | SSR/SSG for SEO, fast page loads, React ecosystem |
 | **Styling** | Tailwind CSS | Utility-first, lightweight, rapid UI development with custom brand tokens |
-| **Animations** | Three.js or CSS animations | Solar system banner; Three.js for 3D, CSS for simpler alternatives |
-| **Backend / API** | Next.js API Routes or Node.js (Express) | Unified stack, server-side logic |
-| **Database** | PostgreSQL | Relational data (products, orders, users); robust and scalable |
-| **ORM** | Prisma | Type-safe database access, migrations, schema management |
-| **Authentication** | NextAuth.js or custom JWT | Flexible auth with session management and RBAC |
-| **File Storage** | AWS S3 / Cloudflare R2 | Product images, blog media, brand assets |
-| **Payment Gateway** | Razorpay / Stripe | Reliable, well-documented APIs (to be decided) |
-| **Email** | SendGrid / AWS SES | Transactional emails (order confirmation, shipping updates, password reset) |
-| **Hosting** | Vercel / AWS | Optimised for Next.js; scalable |
-| **CDN** | Cloudflare / Vercel Edge | Fast global asset delivery |
+| **Animations** | Pure CSS animations | Solar system banner — lightweight, performant, no JS dependency; graceful static fallback on low-end devices |
+| **Backend / API** | Next.js API Routes | Unified full-stack architecture — no separate server needed; simpler deployment and maintenance |
+| **Database** | MySQL | Natively available on Hostinger Node.js hosting; perfect fit for e-commerce relational data at Vastrayug's launch scale |
+| **ORM** | Prisma | Type-safe database access, migrations, schema management — excellent MySQL support |
+| **Authentication** | NextAuth.js | Flexible auth with session management and RBAC; Google & Facebook social login in Phase 4 |
+| **File Storage** | Hostinger Storage | Product images, blog media, and brand assets stored on Hostinger's native storage — no third-party dependency at launch |
+| **Payment Gateway** | Razorpay | Reliable Indian-first payment gateway; supports cards, UPI, net banking, wallets |
+| **Email — Transactional** | SendGrid | Order confirmations, shipping updates, password reset |
+| **SMS — Notifications** | Twilio | Order status SMS notifications at each stage change |
+| **Hosting** | Hostinger Node.js Hosting | Managed Node.js hosting with hPanel; SSH access, SSL included, MySQL native — no manual server configuration needed |
+| **CDN** | Cloudflare | Fast global asset delivery; DDoS protection |
 | **Admin Panel** | Custom-built (React) | Full control over UX and features; no third-party CMS limitations |
-
-> Final tech stack decisions are open to discussion and may change based on team expertise and project constraints.
 
 ---
 
 ### 12. Data Models
+
+> All models are implemented via **Prisma ORM** with a **MySQL** database.
 
 ```
 User
@@ -686,11 +690,11 @@ Admin Login → Pop-ups → Create New → Design Content (text, image, CTA)
 
 | Phase | Scope | Priority |
 |-------|-------|----------|
-| **Phase 1 — MVP** | Storefront (product browsing, cart, checkout, payment), user accounts, admin panel (product + category + sub-category + order management), landing page with revolving solar system banner, basic collection pages, GTM/Meta Pixel base setup | **High** |
+| **Phase 1 — MVP** *(Target: 1 month)* | Storefront (product browsing, cart, checkout, payment via Razorpay), user accounts, admin panel (product + category + sub-category + order management with manual shipping updates), landing page with revolving solar system banner (pure CSS), 3–4 initial planetary collection pages, GTM/Meta Pixel base setup | **High** |
 | **Phase 2 — Content & Engagement** | Blog engine (frontend + admin), newsletter integration, pop-up system, coupon management, promotions management, announcement bar | **High** |
 | **Phase 3 — Analytics & Tracking** | Full GA4 e-commerce DataLayer events, Meta Pixel standard events with all parameters, tag-friendly markup audit, performance optimisation pass | **Medium** |
 | **Phase 4 — Enhancements** | Advanced filters (planet, zodiac, life path), product reviews, wishlist, social login, order notifications (SMS), admin dashboard analytics, admin RBAC roles, search autocomplete | **Medium** |
-| **Phase 5 — Scale & Iterate** | Shipping provider API integration (real-time tracking), Meta Conversions API (server-side), multi-currency support, internationalisation, A/B testing infrastructure, personalisation | **Low** |
+| **Phase 5 — Scale & Iterate** | Shipping provider API integration (automated real-time tracking to replace manual updates), Meta Conversions API (server-side), multi-currency support, internationalisation, A/B testing infrastructure, personalisation | **Low** |
 
 ---
 
@@ -711,22 +715,24 @@ Admin Login → Pop-ups → Create New → Design Content (text, image, CTA)
 
 ### 16. Open Questions
 
-| # | Question | Status |
-|---|----------|--------|
-| 1 | Final domain name for Vastrayug? | Pending |
-| 2 | Payment gateway preference — Razorpay vs Stripe vs other? | Pending |
-| 3 | Shipping providers to integrate in Phase 5? | Pending |
-| 4 | Email marketing platform — Mailchimp, SendGrid, or other? | Pending |
-| 5 | Hosting preference — Vercel, AWS, or other? | Pending |
-| 6 | Initial product categories and sub-categories to launch with? (Full Navagraha set or phased?) | Pending |
-| 7 | Social login providers — Google, Facebook, or other? | Pending |
-| 8 | Multi-language support needed or English-only at launch? | Pending |
-| 9 | Return/refund policy details for order management flow? | Pending |
-| 10 | Budget and timeline constraints? | Pending |
-| 11 | Should the solar system banner use Three.js (3D) or pure CSS animation? (Performance vs visual richness trade-off) | Pending |
-| 12 | Should collection pages (Planetary, Zodiac) have unique colour themes or stay on the primary palette only? | Pending |
-| 13 | SMS notification provider preference (for order updates)? | Pending |
-| 14 | Will Vastrayug launch all 9 planetary + 12 zodiac collections at once, or phase them? | Pending |
+All previously open questions have been resolved. The table below documents the decisions made:
+
+| # | Question | Decision |
+|---|----------|----------|
+| 1 | Final domain name for Vastrayug? | **vastrayug.in** |
+| 2 | Payment gateway preference? | **Razorpay** |
+| 3 | Shipping providers to integrate in Phase 5? | **Manual shipping updates at launch** (admin enters tracking number, provider name, and tracking link per order). Automated API integration deferred to Phase 5. |
+| 4 | Email marketing platform? | **SendGrid** |
+| 5 | Hosting preference? | **Hostinger Node.js Hosting** — managed Node.js with hPanel, native MySQL, SSH access, SSL included |
+| 6 | Initial product categories and collections at launch? | **Phased — launch with 3–4 Navagraha planetary collections first**, then expand to remaining planets and Zodiac collections in subsequent phases. |
+| 7 | Social login providers? | **Google and Facebook** — implemented in Phase 4. |
+| 8 | Multi-language support at launch? | **English only** |
+| 9 | Return/refund policy? | **No returns — exchange only** |
+| 10 | Budget and timeline constraints? | **Phase 1 (MVP) target: maximum 1 month** |
+| 11 | Solar system banner — Three.js or pure CSS? | **Pure CSS animations** — lighter, faster, zero JS overhead. |
+| 12 | Collection page colour themes? | **Primary palette with subtle planet-specific accent** — Cosmic Black + Nebula Gold as anchors, with each planet's dedicated accent colour layered subtly. |
+| 13 | SMS notification provider? | **Twilio** |
+| 14 | Launch all 9 planetary + 12 zodiac collections at once, or phase them? | **Phased — start with 3–4 planets**, expand progressively. |
 
 ---
 
