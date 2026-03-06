@@ -283,7 +283,7 @@ Home (Solar System Banner + Featured Collections + Brand Story)
 
 #### 6.6 User Accounts
 
-- Registration: email + password; social login via **Google and Facebook** (Phase 4).
+- Registration: email + password; social login via **Google** (Phase 4). Facebook social login deferred to a future phase.
 - Login / Logout / Forgot Password.
 - Profile management: name, email, phone, saved addresses.
 - Order history with reorder capability.
@@ -531,7 +531,7 @@ The admin panel is the operational backbone. It must be intuitive, fast, and giv
 | **Backend / API** | Next.js API Routes | Unified full-stack architecture — no separate server needed; simpler deployment and maintenance |
 | **Database** | MySQL | Natively available on Hostinger Node.js hosting; perfect fit for e-commerce relational data at Vastrayug's launch scale |
 | **ORM** | Prisma | Type-safe database access, migrations, schema management — excellent MySQL support |
-| **Authentication** | NextAuth.js | Flexible auth with session management and RBAC; Google & Facebook social login in Phase 4 |
+| **Authentication** | NextAuth.js | Flexible auth with session management and RBAC; Google social login in Phase 4; Facebook deferred to a future phase |
 | **File Storage** | Hostinger Storage | Product images, blog media, and brand assets stored on Hostinger's native storage — no third-party dependency at launch |
 | **Payment Gateway** | Razorpay | Reliable Indian-first payment gateway; supports cards, UPI, net banking, wallets |
 | **Email — Transactional** | SendGrid | Order confirmations, shipping updates, password reset |
@@ -693,7 +693,7 @@ Admin Login → Pop-ups → Create New → Design Content (text, image, CTA)
 | **Phase 1 — MVP** *(Target: 1 month)* | Storefront (product browsing, cart, checkout, payment via Razorpay), user accounts, admin panel (product + category + sub-category + order management with manual shipping updates), landing page with revolving solar system banner (pure CSS), 3–4 initial planetary collection pages, GTM/Meta Pixel base setup | **High** |
 | **Phase 2 — Content & Engagement** | Blog engine (frontend + admin), newsletter integration, pop-up system, coupon management, promotions management, announcement bar | **High** |
 | **Phase 3 — Analytics & Tracking** | Full GA4 e-commerce DataLayer events, Meta Pixel standard events with all parameters, tag-friendly markup audit, performance optimisation pass | **Medium** |
-| **Phase 4 — Enhancements** | Advanced filters (planet, zodiac, life path), product reviews, wishlist, social login, order notifications (SMS), admin dashboard analytics, admin RBAC roles, search autocomplete | **Medium** |
+| **Phase 4 — Enhancements** | Advanced filters (planet, zodiac, life path), product reviews, wishlist, **Google social login**, order notifications (SMS via Twilio), admin dashboard analytics, admin RBAC roles, search autocomplete | **Medium** |
 | **Phase 5 — Scale & Iterate** | Shipping provider API integration (automated real-time tracking to replace manual updates), Meta Conversions API (server-side), multi-currency support, internationalisation, A/B testing infrastructure, personalisation | **Low** |
 
 ---
@@ -725,7 +725,7 @@ All previously open questions have been resolved. The table below documents the 
 | 4 | Email marketing platform? | **SendGrid** |
 | 5 | Hosting preference? | **Hostinger Node.js Hosting** — managed Node.js with hPanel, native MySQL, SSH access, SSL included |
 | 6 | Initial product categories and collections at launch? | **Phased — launch with 3–4 Navagraha planetary collections first**, then expand to remaining planets and Zodiac collections in subsequent phases. |
-| 7 | Social login providers? | **Google and Facebook** — implemented in Phase 4. |
+| 7 | Social login providers? | **Google only** — implemented in Phase 4. Facebook social login deferred to a future phase (requires separate Meta App review). |
 | 8 | Multi-language support at launch? | **English only** |
 | 9 | Return/refund policy? | **No returns — exchange only** |
 | 10 | Budget and timeline constraints? | **Phase 1 (MVP) target: maximum 1 month** |
