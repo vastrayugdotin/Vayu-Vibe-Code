@@ -414,7 +414,15 @@ export const authOptions: NextAuthOptions = {
         const valid = await bcrypt.compare(credentials.password, user.password_hash)
         if (!valid) return null
         if (user.status !== 'ACTIVE') throw new Error('Account suspended')
-        return { id: user.id, email: user.email, name: user.name, role: user.role }
+        // Check if user is using the default seed password (for admin warning banner)
+        const isDefaultPassword = await bcrypt.compare('admin', user.password_hash)
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          isDefaultPassword,
+        }
       },
     }),
     // ── Phase 4: Uncomment when deploying Google OAuth ──
@@ -429,6 +437,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id
         token.role = (user as any).role
+        token.isDefaultPassword = (user as any).isDefaultPassword
       }
       return token
     },
@@ -436,6 +445,7 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id = token.id as string
         session.user.role = token.role as string
+        session.user.isDefaultPassword = token.isDefaultPassword as boolean
       }
       return session
     },
@@ -459,6 +469,25 @@ import bcrypt from 'bcryptjs'
 const hash = await bcrypt.hash(password, 12)
 const valid = await bcrypt.compare(password, hash)
 ```
+
+#### Default Admin Account (Seed)
+
+The database seed script creates one Super Admin account:
+
+| Field | Value |
+|-------|-------|
+| **Email** | `vastrayug.in@gmail.com` |
+| **Password** | `admin` (bcrypt-hashed, 12 salt rounds) |
+| **Name** | `Vastrayug Admin` |
+| **Role** | `SUPER_ADMIN` |
+
+> **Security:** This password must be changed on first login. The admin panel shows a persistent warning banner until the default password is replaced.
+
+#### User Registration Policy
+
+- **All storefront signups assign `role = CUSTOMER`** — this is hardcoded and cannot be overridden by the client.
+- There is no signup flow for admin roles. Only a `SUPER_ADMIN` can promote a `CUSTOMER` to `CONTENT_MANAGER`, `ORDER_MANAGER`, or `SUPER_ADMIN` via the admin panel.
+- Admin password change is available at `/admin/profile` for all admin roles.
 
 #### Route Protection (`middleware.ts`)
 

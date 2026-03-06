@@ -931,7 +931,9 @@ npx prisma db seed
 - Default `Settings` key-value rows
 - Initial `Category` rows: Oversized Tees, Hoodies, Co-ord Sets, Joggers, Jackets, Kurtas, Accessories
 - Initial `Collection` rows: 3–4 Navagraha planets (e.g., Sun, Moon, Saturn, Jupiter) + 5 Vibe collections
-- One `User` row: Super Admin account
+- One `User` row: Super Admin account — **email:** `vastrayug.in@gmail.com`, **password:** `admin` (bcrypt-hashed, 12 salt rounds), **role:** `SUPER_ADMIN`, **name:** `Vastrayug Admin`
+
+> **Note:** All users registered via the storefront signup are assigned `role = CUSTOMER` by default. Only a `SUPER_ADMIN` can promote a user to an admin role (`CONTENT_MANAGER`, `ORDER_MANAGER`, or `SUPER_ADMIN`) via the admin panel.
 
 ---
 

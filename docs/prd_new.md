@@ -284,6 +284,7 @@ Home (Solar System Banner + Featured Collections + Brand Story)
 #### 6.6 User Accounts
 
 - Registration: email + password; social login via **Google** (Phase 4). Facebook social login deferred to a future phase.
+- **All signups register the user with role `CUSTOMER`** — no self-service admin access. Only a Super Admin can promote a user to an admin role via the admin panel.
 - Login / Logout / Forgot Password.
 - Profile management: name, email, phone, saved addresses.
 - Order history with reorder capability.
@@ -381,10 +382,13 @@ The admin panel is the operational backbone. It must be intuitive, fast, and giv
 - View all registered users with search and filters (name, email, registration date, order count).
 - View individual user profile: contact info, order history, account status.
 - Activate / deactivate / ban users.
+- **All storefront signups are registered as `CUSTOMER` by default.** Admin access is not available through self-registration.
+- **Role promotion:** Only a Super Admin can promote a `CUSTOMER` to an admin role. This is the only way to grant admin panel access.
 - Admin roles with Role-Based Access Control (RBAC):
-  - **Super Admin** — Full access to everything.
+  - **Super Admin** — Full access to everything, including role promotion.
   - **Content Manager** — Blog and pop-up management only.
   - **Order Manager** — Order and user management only.
+- **Admin password change:** All admin users can change their own password from the admin profile page.
 
 #### 8.6 Blog Management
 - **Create Post:**
