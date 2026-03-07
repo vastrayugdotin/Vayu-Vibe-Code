@@ -1,0 +1,175 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ═══════════════════════════════════════════════════════════════════
+ * Vastrayug — Global Styles
+ * Reference: tech_stack.md §3, Brand_values_and_vision.md §11
+ *
+ * Font CSS variables are injected on <html> by next/font/google in
+ * app/layout.tsx. They are consumed here and in tailwind.config.ts.
+ *   --font-inter            → body text (font-body)
+ *   --font-cormorant        → headings (font-heading)
+ *   --font-playfair-display  → accent / taglines (font-accent)
+ * ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Base Reset & Defaults ──────────────────────────────────────── */
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    font-family: var(--font-inter), system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+
+  /* Headings default to Cormorant Garamond */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-cormorant), Georgia, serif;
+    text-wrap: balance;
+  }
+
+  /* Paragraphs and body copy get comfortable wrapping */
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Images default to responsive behaviour */
+  img, picture, video, canvas, svg {
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Form elements inherit font */
+  input, button, textarea, select {
+    font: inherit;
+    color: inherit;
+  }
+
+  /* Anchor defaults */
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  /* List reset */
+  ul, ol {
+    list-style: none;
+  }
+
+  /* Selection highlight — nebula-gold brand accent */
+  ::selection {
+    background-color: rgba(201, 168, 76, 0.3); /* nebula-gold @ 30% */
+    color: #F4F1EC; /* stardust-white */
+  }
+
+  /* Focus-visible outline — accessible, brand-consistent */
+  :focus-visible {
+    outline: 2px solid #C9A84C; /* nebula-gold */
+    outline-offset: 2px;
+  }
+}
+
+/* ── Custom Scrollbar (Webkit + Firefox) ────────────────────────── */
+@layer base {
+  /* Firefox */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #1B1640 #0A0A0F; /* deep-indigo thumb / cosmic-black track */
+  }
+
+  /* Webkit (Chrome, Edge, Safari) */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #0A0A0F; /* cosmic-black */
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #1B1640; /* deep-indigo */
+    border-radius: 4px;
+    border: 2px solid #0A0A0F; /* cosmic-black gap */
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #C9A84C; /* nebula-gold on hover */
+  }
+
+  ::-webkit-scrollbar-corner {
+    background: #0A0A0F;
+  }
+}
+
+/* ── Component Utilities ────────────────────────────────────────── */
+@layer components {
+  /* Container for page-width content with responsive padding */
+  .container-brand {
+    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Prose override for blog content — cosmic dark theme */
+  .prose-cosmic {
+    @apply prose prose-invert
+      prose-headings:font-heading prose-headings:text-stardust-white
+      prose-p:text-eclipse-silver prose-p:leading-relaxed
+      prose-a:text-nebula-gold prose-a:no-underline hover:prose-a:underline
+      prose-strong:text-stardust-white
+      prose-blockquote:border-nebula-gold prose-blockquote:text-eclipse-silver
+      prose-code:text-nebula-gold
+      prose-hr:border-deep-indigo;
+  }
+}
+
+/* ── Utility Classes ────────────────────────────────────────────── */
+@layer utilities {
+  /* Hide scrollbar while maintaining scroll functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Cosmic text gradient — used on hero headings */
+  .text-gradient-gold {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, #C9A84C 0%, #FADA5E 50%, #C9A84C 100%);
+  }
+
+  /* Glassmorphism card effect */
+  .glass {
+    @apply backdrop-blur-md;
+    background: rgba(27, 22, 64, 0.6); /* deep-indigo @ 60% */
+    border: 1px solid rgba(201, 168, 76, 0.1); /* nebula-gold @ 10% */
+  }
+
+  /* Cosmic background noise texture overlay */
+  .bg-noise {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  }
+
+  /* CSS variable for orbit animation radius (used by SolarSystemBanner) */
+  .orbit-ring {
+    --orbit-radius: 100px;
+  }
+}

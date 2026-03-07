@@ -1,0 +1,731 @@
+// ─────────────────────────────────────────────────────────────
+// Vastrayug E-Commerce Platform — Prisma Schema
+// Database: MySQL · IDs: CUID · Naming: camelCase (Prisma) → snake_case (DB)
+// Source of truth: docs/_schema.md
+// ─────────────────────────────────────────────────────────────
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextIndex"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ENUMERATIONS
+// ═══════════════════════════════════════════════════════════════
+
+enum UserRole {
+  SUPER_ADMIN
+  CONTENT_MANAGER
+  ORDER_MANAGER
+  CUSTOMER
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  BANNED
+}
+
+enum ProductStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum OrderStatus {
+  PLACED
+  PROCESSING
+  SHIPPED
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+  REFUNDED
+  EXCHANGED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FLAT
+}
+
+enum CouponApplicability {
+  SITE_WIDE
+  CATEGORY
+  PRODUCT
+}
+
+enum CollectionType {
+  PLANETARY
+  ZODIAC
+  NUMEROLOGY
+  VIBE
+  RITUAL
+}
+
+enum NavagrahaPlanet {
+  SUN
+  MOON
+  MARS
+  MERCURY
+  JUPITER
+  VENUS
+  SATURN
+  RAHU
+  KETU
+}
+
+enum ZodiacSign {
+  ARIES
+  TAURUS
+  GEMINI
+  CANCER
+  LEO
+  VIRGO
+  LIBRA
+  SCORPIO
+  SAGITTARIUS
+  CAPRICORN
+  AQUARIUS
+  PISCES
+}
+
+enum PopupTrigger {
+  DELAY
+  SCROLL_DEPTH
+  EXIT_INTENT
+}
+
+enum PopupFrequency {
+  ONCE_SESSION
+  ONCE_EVER
+  EVERY_VISIT
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum BlogPostStatus {
+  DRAFT
+  PUBLISHED
+  SCHEDULED
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CORE MODELS
+// ═══════════════════════════════════════════════════════════════
+
+/// Stores all platform users — customers and admin roles unified, distinguished by `role`.
+model User {
+  id              String     @id @default(cuid())
+  email           String     @unique
+  passwordHash    String?    @map("password_hash")
+  name            String
+  phone           String?
+  role            UserRole   @default(CUSTOMER)
+  status          UserStatus @default(ACTIVE)
+  emailVerifiedAt DateTime?  @map("email_verified_at")
+  avatarUrl       String?    @map("avatar_url")
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+
+  addresses      Address[]
+  orders         Order[]
+  reviews        Review[]
+  wishlist       Wishlist[]
+  cart           Cart?
+  blogPosts      BlogPost[]
+  couponUsages   CouponUsage[]
+  statusChanges  OrderStatusHistory[]
+  activityLogs   AdminActivityLog[]
+
+  @@index([role])
+  @@index([status])
+  @@map("users")
+}
+
+/// Shipping/billing addresses for a user. Multiple per user, one marked as default.
+model Address {
+  id         String   @id @default(cuid())
+  userId     String   @map("user_id")
+  label      String?
+  name       String
+  phone      String
+  line1      String
+  line2      String?
+  city       String
+  state      String
+  postalCode String   @map("postal_code")
+  country    String   @default("IN")
+  isDefault  Boolean  @default(false) @map("is_default")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user   User    @relation(fields: [userId], references: [id])
+  orders Order[]
+
+  @@index([userId])
+  @@index([userId, isDefault])
+  @@map("addresses")
+}
+
+/// Core catalogue entity. Carries cosmic metadata as first-class fields.
+model Product {
+  id                 String           @id @default(cuid())
+  title              String
+  slug               String           @unique
+  description        String           @db.Text
+  price              Decimal          @db.Decimal(10, 2)
+  compareAtPrice     Decimal?         @map("compare_at_price") @db.Decimal(10, 2)
+  sku                String           @unique
+  stock              Int              @default(0)
+  categoryId         String           @map("category_id")
+  subCategoryId      String?          @map("sub_category_id")
+  planet             NavagrahaPlanet?
+  zodiacSign         ZodiacSign?      @map("zodiac_sign")
+  lifePathNumber     Int?             @map("life_path_number")
+  emotionalIntention String?          @map("emotional_intention")
+  tags               String?
+  metaTitle          String?          @map("meta_title")
+  metaDescription    String?          @map("meta_description") @db.Text
+  status             ProductStatus    @default(DRAFT)
+  featured           Boolean          @default(false)
+  createdAt          DateTime         @default(now()) @map("created_at")
+  updatedAt          DateTime         @updatedAt @map("updated_at")
+
+  images        ProductImage[]
+  variants      ProductVariant[]
+  category      Category           @relation(fields: [categoryId], references: [id])
+  subCategory   SubCategory?       @relation(fields: [subCategoryId], references: [id])
+  collections   ProductCollection[]
+  reviews       Review[]
+  wishlistItems Wishlist[]
+  orderItems    OrderItem[]
+
+  @@index([categoryId])
+  @@index([status])
+  @@index([planet])
+  @@index([zodiacSign])
+  @@index([lifePathNumber])
+  @@index([featured])
+  @@fulltext([title, tags, emotionalIntention])
+  @@map("products")
+}
+
+/// Ordered image gallery per product.
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String  @map("product_id")
+  url       String
+  altText   String? @map("alt_text")
+  sortOrder Int     @default(0) @map("sort_order")
+  isPrimary Boolean @default(false) @map("is_primary")
+
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([productId])
+  @@index([productId, sortOrder])
+  @@map("product_images")
+}
+
+/// A specific size + colour combination under a product, with its own SKU and stock.
+model ProductVariant {
+  id            String   @id @default(cuid())
+  productId     String   @map("product_id")
+  size          String
+  colour        String?
+  sku           String   @unique
+  stock         Int      @default(0)
+  priceOverride Decimal? @map("price_override") @db.Decimal(10, 2)
+  isActive      Boolean  @default(true) @map("is_active")
+
+  product    Product     @relation(fields: [productId], references: [id])
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+
+  @@unique([productId, size, colour])
+  @@index([productId])
+  @@map("product_variants")
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CATALOGUE MODELS
+// ═══════════════════════════════════════════════════════════════
+
+/// Top-level product groupings — physical garment types.
+model Category {
+  id              String   @id @default(cuid())
+  name            String
+  slug            String   @unique
+  description     String?  @db.Text
+  imageUrl        String?  @map("image_url")
+  sortOrder       Int      @default(0) @map("sort_order")
+  metaTitle       String?  @map("meta_title")
+  metaDescription String?  @map("meta_description") @db.Text
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  subCategories SubCategory[]
+  products      Product[]
+
+  @@index([sortOrder])
+  @@map("categories")
+}
+
+/// Nested under a category. Represents theme groupings (Zodiac, Planet Series, etc.).
+model SubCategory {
+  id              String   @id @default(cuid())
+  categoryId      String   @map("category_id")
+  name            String
+  slug            String   @unique
+  description     String?  @db.Text
+  imageUrl        String?  @map("image_url")
+  sortOrder       Int      @default(0) @map("sort_order")
+  metaTitle       String?  @map("meta_title")
+  metaDescription String?  @map("meta_description") @db.Text
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  category Category  @relation(fields: [categoryId], references: [id])
+  products Product[]
+
+  @@index([categoryId])
+  @@map("sub_categories")
+}
+
+/// Thematic groupings that cut across categories — Planetary, Zodiac, Numerology, Vibe & Energy.
+model Collection {
+  id                String           @id @default(cuid())
+  name              String
+  slug              String           @unique
+  type              CollectionType
+  description       String?          @db.Text
+  imageUrl          String?          @map("image_url")
+  planet            NavagrahaPlanet?
+  zodiacSign        ZodiacSign?      @map("zodiac_sign")
+  lifePathNumber    Int?             @map("life_path_number")
+  colourPaletteJson Json?            @map("colour_palette_json")
+  sortOrder         Int              @default(0) @map("sort_order")
+  isActive          Boolean          @default(true) @map("is_active")
+  metaTitle         String?          @map("meta_title")
+  metaDescription   String?          @map("meta_description") @db.Text
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  products ProductCollection[]
+
+  @@index([type])
+  @@index([planet])
+  @@index([zodiacSign])
+  @@map("collections")
+}
+
+// ═══════════════════════════════════════════════════════════════
+// COMMERCE MODELS
+// ═══════════════════════════════════════════════════════════════
+
+/// One cart per user (or session for guests). Persistent for logged-in users.
+model Cart {
+  id        String   @id @default(cuid())
+  userId    String?  @unique @map("user_id")
+  sessionId String?  @map("session_id")
+  couponId  String?  @map("coupon_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user   User?      @relation(fields: [userId], references: [id])
+  coupon Coupon?    @relation(fields: [couponId], references: [id])
+  items  CartItem[]
+
+  @@index([sessionId])
+  @@map("carts")
+}
+
+/// Line items inside a cart.
+model CartItem {
+  id               String @id @default(cuid())
+  cartId           String @map("cart_id")
+  productVariantId String @map("product_variant_id")
+  quantity         Int
+
+  cart           Cart           @relation(fields: [cartId], references: [id])
+  productVariant ProductVariant @relation(fields: [productVariantId], references: [id])
+
+  @@unique([cartId, productVariantId])
+  @@index([cartId])
+  @@map("cart_items")
+}
+
+/// A completed purchase. Snapshot of prices at time of order.
+model Order {
+  id                   String        @id @default(cuid())
+  orderNumber          String        @unique @map("order_number")
+  userId               String?       @map("user_id")
+  guestEmail           String?       @map("guest_email")
+  shippingAddressId    String        @map("shipping_address_id")
+  shippingAddressJson  Json          @map("shipping_address_json")
+  subtotal             Decimal       @db.Decimal(10, 2)
+  discountAmount       Decimal       @default(0) @map("discount_amount") @db.Decimal(10, 2)
+  couponId             String?       @map("coupon_id")
+  couponCodeSnapshot   String?       @map("coupon_code_snapshot")
+  shippingCost         Decimal       @default(0) @map("shipping_cost") @db.Decimal(10, 2)
+  taxAmount            Decimal       @default(0) @map("tax_amount") @db.Decimal(10, 2)
+  total                Decimal       @db.Decimal(10, 2)
+  status               OrderStatus   @default(PLACED)
+  paymentStatus        PaymentStatus @default(PENDING) @map("payment_status")
+  razorpayOrderId      String?       @map("razorpay_order_id")
+  razorpayPaymentId    String?       @map("razorpay_payment_id")
+  trackingNumber       String?       @map("tracking_number")
+  shippingProvider     String?       @map("shipping_provider")
+  trackingUrl          String?       @map("tracking_url")
+  exchangeForOrderId   String?       @map("exchange_for_order_id")
+  notes                String?       @db.Text
+  createdAt            DateTime      @default(now()) @map("created_at")
+  updatedAt            DateTime      @updatedAt @map("updated_at")
+
+  items           OrderItem[]
+  statusHistory   OrderStatusHistory[]
+  coupon          Coupon?    @relation(fields: [couponId], references: [id])
+  user            User?      @relation(fields: [userId], references: [id])
+  shippingAddress Address    @relation(fields: [shippingAddressId], references: [id])
+  exchangeForOrder  Order?   @relation("OrderExchange", fields: [exchangeForOrderId], references: [id])
+  exchangeOrders    Order[]  @relation("OrderExchange")
+  couponUsages    CouponUsage[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([paymentStatus])
+  @@index([createdAt])
+  @@map("orders")
+}
+
+/// Snapshot of each purchased item. Prices captured at order time.
+model OrderItem {
+  id                   String  @id @default(cuid())
+  orderId              String  @map("order_id")
+  productId            String  @map("product_id")
+  productVariantId     String  @map("product_variant_id")
+  productTitleSnapshot String  @map("product_title_snapshot")
+  variantSnapshot      Json    @map("variant_snapshot")
+  unitPrice            Decimal @map("unit_price") @db.Decimal(10, 2)
+  quantity             Int
+  lineTotal            Decimal @map("line_total") @db.Decimal(10, 2)
+
+  order          Order          @relation(fields: [orderId], references: [id])
+  product        Product        @relation(fields: [productId], references: [id])
+  productVariant ProductVariant @relation(fields: [productVariantId], references: [id])
+
+  @@index([orderId])
+  @@index([productId])
+  @@map("order_items")
+}
+
+/// Immutable audit log of every status change on an order.
+model OrderStatusHistory {
+  id              String      @id @default(cuid())
+  orderId         String      @map("order_id")
+  status          OrderStatus
+  note            String?
+  changedByUserId String?     @map("changed_by_user_id")
+  changedAt       DateTime    @default(now()) @map("changed_at")
+
+  order     Order @relation(fields: [orderId], references: [id])
+  changedBy User? @relation(fields: [changedByUserId], references: [id])
+
+  @@index([orderId])
+  @@index([changedAt])
+  @@map("order_status_history")
+}
+
+/// Flexible discount codes with full rule configuration.
+model Coupon {
+  id                String              @id @default(cuid())
+  code              String              @unique
+  description       String?
+  discountType      DiscountType        @map("discount_type")
+  discountValue     Decimal             @map("discount_value") @db.Decimal(10, 2)
+  minOrderValue     Decimal             @default(0) @map("min_order_value") @db.Decimal(10, 2)
+  maxDiscount       Decimal?            @map("max_discount") @db.Decimal(10, 2)
+  usageLimit        Int?                @map("usage_limit")
+  perUserLimit      Int                 @default(1) @map("per_user_limit")
+  timesUsed         Int                 @default(0) @map("times_used")
+  validFrom         DateTime            @map("valid_from")
+  validUntil        DateTime            @map("valid_until")
+  applicability     CouponApplicability @default(SITE_WIDE)
+  applicableIdsJson Json?               @map("applicable_ids_json")
+  firstOrderOnly    Boolean             @default(false) @map("first_order_only")
+  isStackable       Boolean             @default(false) @map("is_stackable")
+  isActive          Boolean             @default(true) @map("is_active")
+  createdAt         DateTime            @default(now()) @map("created_at")
+  updatedAt         DateTime            @updatedAt @map("updated_at")
+
+  usages CouponUsage[]
+  orders Order[]
+  carts  Cart[]
+
+  @@index([isActive])
+  @@index([validFrom, validUntil])
+  @@map("coupons")
+}
+
+/// Tracks per-user per-order coupon redemption.
+model CouponUsage {
+  id              String   @id @default(cuid())
+  couponId        String   @map("coupon_id")
+  userId          String   @map("user_id")
+  orderId         String   @map("order_id")
+  discountApplied Decimal  @map("discount_applied") @db.Decimal(10, 2)
+  usedAt          DateTime @default(now()) @map("used_at")
+
+  coupon Coupon @relation(fields: [couponId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+  order  Order  @relation(fields: [orderId], references: [id])
+
+  @@index([couponId])
+  @@index([userId])
+  @@index([couponId, userId])
+  @@index([orderId])
+  @@map("coupon_usages")
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ENGAGEMENT MODELS
+// ═══════════════════════════════════════════════════════════════
+
+/// Product reviews with moderation.
+model Review {
+  id        String       @id @default(cuid())
+  productId String       @map("product_id")
+  userId    String       @map("user_id")
+  rating    Int
+  comment   String?      @db.Text
+  status    ReviewStatus @default(PENDING)
+  createdAt DateTime     @default(now()) @map("created_at")
+
+  product Product @relation(fields: [productId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@unique([productId, userId])
+  @@index([productId])
+  @@index([userId])
+  @@index([status])
+  @@map("reviews")
+}
+
+/// Saved products for a logged-in user.
+model Wishlist {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  productId String   @map("product_id")
+  addedAt   DateTime @default(now()) @map("added_at")
+
+  user    User    @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([userId, productId])
+  @@index([userId])
+  @@map("wishlists")
+}
+
+/// Content categories for the blog.
+model BlogCategory {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+
+  posts BlogPost[]
+
+  @@map("blog_categories")
+}
+
+/// Free-form tags for cross-cutting blog topics.
+model BlogTag {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+
+  posts BlogPostTag[]
+
+  @@map("blog_tags")
+}
+
+/// Rich-content blog posts for SEO and cosmic content strategy.
+model BlogPost {
+  id               String         @id @default(cuid())
+  title            String
+  slug             String         @unique
+  body             String         @db.LongText
+  excerpt          String?        @db.Text
+  featuredImageUrl String?        @map("featured_image_url")
+  featuredImageAlt String?        @map("featured_image_alt")
+  blogCategoryId   String?        @map("blog_category_id")
+  authorId         String         @map("author_id")
+  status           BlogPostStatus @default(DRAFT)
+  publishedAt      DateTime?      @map("published_at")
+  isFeatured       Boolean        @default(false) @map("is_featured")
+  metaTitle        String?        @map("meta_title")
+  metaDescription  String?        @map("meta_description") @db.Text
+  canonicalUrl     String?        @map("canonical_url")
+  createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime       @updatedAt @map("updated_at")
+
+  tags     BlogPostTag[]
+  category BlogCategory? @relation(fields: [blogCategoryId], references: [id])
+  author   User          @relation(fields: [authorId], references: [id])
+
+  @@index([status])
+  @@index([publishedAt])
+  @@index([blogCategoryId])
+  @@index([isFeatured])
+  @@map("blog_posts")
+}
+
+/// Email list for SendGrid integration.
+model NewsletterSubscriber {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  source         String?
+  isActive       Boolean   @default(true) @map("is_active")
+  subscribedAt   DateTime  @default(now()) @map("subscribed_at")
+  unsubscribedAt DateTime? @map("unsubscribed_at")
+
+  @@index([isActive])
+  @@map("newsletter_subscribers")
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ADMIN / MARKETING MODELS
+// ═══════════════════════════════════════════════════════════════
+
+/// Configurable pop-ups for newsletter capture, announcements, welcome messages.
+model Popup {
+  id              String         @id @default(cuid())
+  title           String
+  contentJson     Json           @map("content_json")
+  triggerType     PopupTrigger   @map("trigger_type")
+  triggerValue    Int?           @map("trigger_value")
+  targetPagesJson Json?          @map("target_pages_json")
+  frequency       PopupFrequency @default(ONCE_SESSION)
+  startDate       DateTime?      @map("start_date")
+  endDate         DateTime?      @map("end_date")
+  isActive        Boolean        @default(false) @map("is_active")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  @@index([isActive])
+  @@index([startDate, endDate])
+  @@map("popups")
+}
+
+/// Auto-applied or code-linked discount rules for collections/categories.
+model Promotion {
+  id                String              @id @default(cuid())
+  name              String
+  description       String?             @db.Text
+  discountType      DiscountType        @map("discount_type")
+  discountValue     Decimal             @map("discount_value") @db.Decimal(10, 2)
+  applicability     CouponApplicability @default(SITE_WIDE)
+  applicableIdsJson Json?               @map("applicable_ids_json")
+  autoApply         Boolean             @default(true) @map("auto_apply")
+  promoCode         String?             @map("promo_code")
+  startDate         DateTime            @map("start_date")
+  endDate           DateTime            @map("end_date")
+  isActive          Boolean             @default(false) @map("is_active")
+  createdAt         DateTime            @default(now()) @map("created_at")
+
+  @@index([isActive])
+  @@index([startDate, endDate])
+  @@map("promotions")
+}
+
+/// Top-of-site promotional strip. Only one active at a time.
+model AnnouncementBar {
+  id         String    @id @default(cuid())
+  message    String
+  linkUrl    String?   @map("link_url")
+  linkText   String?   @map("link_text")
+  bgColour   String    @default("#C9A84C") @map("bg_colour")
+  textColour String    @default("#0A0A0F") @map("text_colour")
+  isActive   Boolean   @default(false) @map("is_active")
+  startDate  DateTime? @map("start_date")
+  endDate    DateTime? @map("end_date")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  @@index([isActive])
+  @@map("announcement_bars")
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SYSTEM MODELS
+// ═══════════════════════════════════════════════════════════════
+
+/// Key-value store for all configurable site settings.
+model Settings {
+  key       String   @id
+  value     String   @db.Text
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("settings")
+}
+
+/// Immutable audit trail of admin actions.
+model AdminActivityLog {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  action      String
+  entityType  String   @map("entity_type")
+  entityId    String   @map("entity_id")
+  payloadJson Json?    @map("payload_json")
+  ipAddress   String?  @map("ip_address")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([entityType])
+  @@index([createdAt])
+  @@map("admin_activity_logs")
+}
+
+// ═══════════════════════════════════════════════════════════════
+// JUNCTION / PIVOT TABLES
+// ═══════════════════════════════════════════════════════════════
+
+/// Many-to-Many: Product <-> Collection
+model ProductCollection {
+  productId    String @map("product_id")
+  collectionId String @map("collection_id")
+  sortOrder    Int    @default(0) @map("sort_order")
+
+  product    Product    @relation(fields: [productId], references: [id])
+  collection Collection @relation(fields: [collectionId], references: [id])
+
+  @@id([productId, collectionId])
+  @@map("product_collections")
+}
+
+/// Many-to-Many: BlogPost <-> BlogTag
+model BlogPostTag {
+  blogPostId String @map("blog_post_id")
+  blogTagId  String @map("blog_tag_id")
+
+  blogPost BlogPost @relation(fields: [blogPostId], references: [id])
+  blogTag  BlogTag  @relation(fields: [blogTagId], references: [id])
+
+  @@id([blogPostId, blogTagId])
+  @@map("blog_post_tags")
+}
