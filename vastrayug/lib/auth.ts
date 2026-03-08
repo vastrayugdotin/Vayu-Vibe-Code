@@ -10,78 +10,78 @@
 // Adapter: PrismaAdapter (for future OAuth account linking)
 // ─────────────────────────────────────────────────────────────
 
-import { NextAuthOptions, getServerSession, Session } from 'next-auth'
-import CredentialsProvider from 'next-auth/providers/credentials'
+import { NextAuthOptions, getServerSession, Session } from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
 // import GoogleProvider from 'next-auth/providers/google'  // Phase 4
-import { PrismaAdapter } from '@auth/prisma-adapter'
-import { prisma } from '@/lib/prisma'
-import bcrypt from 'bcryptjs'
-import type { UserRole } from '@prisma/client'
+import { PrismaAdapter } from "@auth/prisma-adapter";
+import { prisma } from "@/lib/prisma";
+import bcrypt from "bcryptjs";
+import type { UserRole } from "@prisma/client";
 
 // ── NextAuth Type Extensions ───────────────────────────────────────
 // Extend the built-in types to include our custom fields
-declare module 'next-auth' {
+declare module "next-auth" {
   interface User {
-    role: string
-    isDefaultPassword?: boolean
+    role: string;
+    isDefaultPassword?: boolean;
   }
   interface Session {
     user: {
-      id: string
-      email: string
-      name: string
-      role: string
-      isDefaultPassword?: boolean
-      image?: string | null
-    }
+      id: string;
+      email: string;
+      name: string;
+      role: string;
+      isDefaultPassword?: boolean;
+      image?: string | null;
+    };
   }
 }
 
-declare module 'next-auth/jwt' {
+declare module "next-auth/jwt" {
   interface JWT {
-    id: string
-    role: string
-    isDefaultPassword?: boolean
+    id: string;
+    role: string;
+    isDefaultPassword?: boolean;
   }
 }
 
 // ── Auth Options ───────────────────────────────────────────────────
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma) as NextAuthOptions['adapter'],
-  session: { strategy: 'jwt' },
+  adapter: PrismaAdapter(prisma) as NextAuthOptions["adapter"],
+  session: { strategy: "jwt" },
   secret: process.env.NEXTAUTH_SECRET,
 
   providers: [
     CredentialsProvider({
-      name: 'credentials',
+      name: "credentials",
       credentials: {
-        email: { label: 'Email', type: 'email' },
-        password: { label: 'Password', type: 'password' },
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null
+        if (!credentials?.email || !credentials?.password) return null;
 
         const user = await prisma.user.findUnique({
           where: { email: credentials.email },
-        })
+        });
 
-        if (!user || !user.passwordHash) return null
+        if (!user || !user.passwordHash) return null;
 
         const valid = await bcrypt.compare(
           credentials.password,
-          user.passwordHash
-        )
-        if (!valid) return null
+          user.passwordHash,
+        );
+        if (!valid) return null;
 
-        if (user.status !== 'ACTIVE') {
-          throw new Error('Account suspended')
+        if (user.status !== "ACTIVE") {
+          throw new Error("Account suspended");
         }
 
         // Detect default seed password for admin warning banner
         const isDefaultPassword = await bcrypt.compare(
-          'admin',
-          user.passwordHash
-        )
+          "admin",
+          user.passwordHash,
+        );
 
         return {
           id: user.id,
@@ -89,7 +89,7 @@ export const authOptions: NextAuthOptions = {
           name: user.name,
           role: user.role,
           isDefaultPassword,
-        }
+        };
       },
     }),
 
@@ -106,44 +106,44 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id
-        token.role = user.role
-        token.isDefaultPassword = user.isDefaultPassword
+        token.id = user.id;
+        token.role = user.role;
+        token.isDefaultPassword = user.isDefaultPassword;
       }
-      return token
+      return token;
     },
 
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = token.id
-        session.user.role = token.role
-        session.user.isDefaultPassword = token.isDefaultPassword
+        session.user.id = token.id;
+        session.user.role = token.role;
+        session.user.isDefaultPassword = token.isDefaultPassword;
       }
-      return session
+      return session;
     },
   },
 
   pages: {
-    signIn: '/login',
-    error: '/login',
-    newUser: '/account',
+    signIn: "/login",
+    error: "/login",
+    newUser: "/account",
   },
-}
+};
 
 // ── Server-Side Session Helper ─────────────────────────────────────
 // Use in Server Components and API Route Handlers
 export async function getSession() {
-  return getServerSession(authOptions)
+  return getServerSession(authOptions);
 }
 
 // ── RBAC Helpers ───────────────────────────────────────────────────
 // Reference: admin_panel_spec.md §3 — Role Permissions Matrix
 
 const ADMIN_ROLES: UserRole[] = [
-  'SUPER_ADMIN',
-  'CONTENT_MANAGER',
-  'ORDER_MANAGER',
-]
+  "SUPER_ADMIN",
+  "CONTENT_MANAGER",
+  "ORDER_MANAGER",
+];
 
 /**
  * Require the session user to have one of the specified roles.
@@ -153,17 +153,17 @@ const ADMIN_ROLES: UserRole[] = [
  *   const session = await requireRole('SUPER_ADMIN', 'CONTENT_MANAGER')
  */
 export async function requireRole(...roles: UserRole[]) {
-  const session = await getSession()
+  const session = await getSession();
 
   if (!session?.user) {
-    throw new Error('Unauthenticated')
+    throw new Error("Unauthenticated");
   }
 
   if (!roles.includes(session.user.role as UserRole)) {
-    throw new Error('Forbidden')
+    throw new Error("Forbidden");
   }
 
-  return session
+  return session;
 }
 
 /**
@@ -174,7 +174,7 @@ export async function requireRole(...roles: UserRole[]) {
  *   const session = await requireAdmin()
  */
 export async function requireAdmin() {
-  return requireRole(...ADMIN_ROLES)
+  return requireRole(...ADMIN_ROLES);
 }
 
 /**
@@ -185,7 +185,7 @@ export async function requireAdmin() {
  *   const session = await requireSuperAdmin()
  */
 export async function requireSuperAdmin() {
-  return requireRole('SUPER_ADMIN')
+  return requireRole("SUPER_ADMIN");
 }
 
 /**
@@ -196,11 +196,11 @@ export async function requireSuperAdmin() {
  *   const session = await requireAuth()
  */
 export async function requireAuth() {
-  const session = await getSession()
+  const session = await getSession();
 
   if (!session?.user) {
-    throw new Error('Unauthenticated')
+    throw new Error("Unauthenticated");
   }
 
-  return session
+  return session;
 }

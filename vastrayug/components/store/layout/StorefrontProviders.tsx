@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 // ─────────────────────────────────────────────────────────────
 // Storefront Providers — Client boundary for SessionProvider
@@ -12,15 +12,15 @@
 // layout to avoid a redundant client-side /api/auth/session call.
 // ─────────────────────────────────────────────────────────────
 
-import { SessionProvider } from 'next-auth/react'
-import type { Session } from 'next-auth'
+import { SessionProvider } from "next-auth/react";
+import type { Session } from "next-auth";
 
 export default function StorefrontProviders({
   children,
   session,
 }: {
-  children: React.ReactNode
-  session: Session | null
+  children: React.ReactNode;
+  session: Session | null;
 }) {
-  return <SessionProvider session={session}>{children}</SessionProvider>
+  return <SessionProvider session={session}>{children}</SessionProvider>;
 }

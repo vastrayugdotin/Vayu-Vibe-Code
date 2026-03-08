@@ -1,35 +1,43 @@
-import Link from 'next/link'
-import { Instagram, Facebook, Twitter, Phone as WhatsApp } from 'lucide-react'
+import Link from "next/link";
+import { Instagram, Facebook, Twitter, Phone as WhatsApp } from "lucide-react";
 
 const FOOTER_LINKS = {
   shop: [
-    { href: '/shop', label: 'All Products' },
-    { href: '/collections', label: 'Cosmic Collections' },
-    { href: '/shop?category=apparel', label: 'Apparel' },
-    { href: '/shop?category=accessories', label: 'Accessories' },
+    { href: "/shop", label: "All Products" },
+    { href: "/collections", label: "Cosmic Collections" },
+    { href: "/shop?category=apparel", label: "Apparel" },
+    { href: "/shop?category=accessories", label: "Accessories" },
   ],
   company: [
-    { href: '/about', label: 'Our Story' },
-    { href: '/blog', label: 'Cosmic Journal' },
-    { href: '/contact', label: 'Contact Us' },
-    { href: '/faq', label: 'FAQ' },
+    { href: "/about", label: "Our Story" },
+    { href: "/blog", label: "Cosmic Journal" },
+    { href: "/contact", label: "Contact Us" },
+    { href: "/faq", label: "FAQ" },
   ],
   legal: [
-    { href: '/privacy-policy', label: 'Privacy Policy' },
-    { href: '/terms', label: 'Terms of Service' },
-    { href: '/shipping-policy', label: 'Shipping Policy' },
-    { href: '/exchange-policy', label: 'Exchange Policy' },
+    { href: "/privacy-policy", label: "Privacy Policy" },
+    { href: "/terms", label: "Terms of Service" },
+    { href: "/shipping-policy", label: "Shipping Policy" },
+    { href: "/exchange-policy", label: "Exchange Policy" },
   ],
-}
+};
 
 const SOCIAL_LINKS = [
-  { href: 'https://instagram.com/vastrayug', icon: Instagram, label: 'Instagram' },
-  { href: 'https://wa.me/yourwhatsappnumber', icon: WhatsApp, label: 'WhatsApp' },
-  { href: 'https://facebook.com/vastrayug', icon: Facebook, label: 'Facebook' },
+  {
+    href: "https://instagram.com/vastrayug",
+    icon: Instagram,
+    label: "Instagram",
+  },
+  {
+    href: "https://wa.me/yourwhatsappnumber",
+    icon: WhatsApp,
+    label: "WhatsApp",
+  },
+  { href: "https://facebook.com/vastrayug", icon: Facebook, label: "Facebook" },
   // Using Twitter icon as fallback for X/Pinterest if needed, though Pinterest is requested.
   // Lucide has no Pinterest icon by default in some older versions, so we use Twitter as a placeholder if needed,
   // but let's try to import a generic one or use text if it fails. We will use a custom SVG for Pinterest.
-]
+];
 
 function PinterestIcon({ className }: { className?: string }) {
   return (
@@ -51,21 +59,22 @@ function PinterestIcon({ className }: { className?: string }) {
       <path d="M12 14v8" />
       <circle cx="12" cy="12" r="10" />
     </svg>
-  )
+  );
 }
 
-
 export default function Footer() {
-  const currentYear = new Date().getFullYear()
+  const currentYear = new Date().getFullYear();
 
   return (
     <footer className="bg-void-black border-t border-white/10 pt-16 pb-8">
       <div className="container mx-auto px-4 md:px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 lg:gap-8 mb-16">
-
           {/* Brand & Newsletter Section */}
           <div className="lg:col-span-2 flex flex-col items-start">
-            <Link href="/" className="font-heading text-2xl tracking-widest text-stardust-white mb-4 flex items-center gap-2">
+            <Link
+              href="/"
+              className="font-heading text-2xl tracking-widest text-stardust-white mb-4 flex items-center gap-2"
+            >
               <span className="text-nebula-gold">✦</span>
               VASTRAYUG
             </Link>
@@ -78,7 +87,8 @@ export default function Footer() {
                 Join the Cosmic Circle
               </h3>
               <p className="text-sm text-stardust-white/60 mb-4 font-body">
-                Subscribe for planetary insights, early access to drops, and exclusive offers.
+                Subscribe for planetary insights, early access to drops, and
+                exclusive offers.
               </p>
               <form className="flex gap-2" onSubmit={(e) => e.preventDefault()}>
                 <input
@@ -166,7 +176,7 @@ export default function Footer() {
 
           <div className="flex items-center gap-6">
             {SOCIAL_LINKS.map((social) => {
-              const Icon = social.icon
+              const Icon = social.icon;
               return (
                 <a
                   key={social.label}
@@ -178,7 +188,7 @@ export default function Footer() {
                 >
                   <Icon className="w-5 h-5" />
                 </a>
-              )
+              );
             })}
             <a
               href="https://pinterest.com/vastrayug"
@@ -193,5 +203,5 @@ export default function Footer() {
         </div>
       </div>
     </footer>
-  )
+  );
 }

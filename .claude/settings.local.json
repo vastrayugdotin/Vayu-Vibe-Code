@@ -3,7 +3,8 @@
     "allow": [
       "Bash(npx next:*)",
       "Bash(npm run:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(cat:*)"
     ]
   }
 }

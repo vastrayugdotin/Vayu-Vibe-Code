@@ -39,7 +39,12 @@
   }
 
   /* Headings default to Cormorant Garamond */
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: var(--font-cormorant), Georgia, serif;
     text-wrap: balance;
   }
@@ -50,14 +55,21 @@
   }
 
   /* Images default to responsive behaviour */
-  img, picture, video, canvas, svg {
+  img,
+  picture,
+  video,
+  canvas,
+  svg {
     display: block;
     max-width: 100%;
     height: auto;
   }
 
   /* Form elements inherit font */
-  input, button, textarea, select {
+  input,
+  button,
+  textarea,
+  select {
     font: inherit;
     color: inherit;
   }
@@ -69,19 +81,20 @@
   }
 
   /* List reset */
-  ul, ol {
+  ul,
+  ol {
     list-style: none;
   }
 
   /* Selection highlight — nebula-gold brand accent */
   ::selection {
     background-color: rgba(201, 168, 76, 0.3); /* nebula-gold @ 30% */
-    color: #F4F1EC; /* stardust-white */
+    color: #f4f1ec; /* stardust-white */
   }
 
   /* Focus-visible outline — accessible, brand-consistent */
   :focus-visible {
-    outline: 2px solid #C9A84C; /* nebula-gold */
+    outline: 2px solid #c9a84c; /* nebula-gold */
     outline-offset: 2px;
   }
 }
@@ -91,7 +104,7 @@
   /* Firefox */
   * {
     scrollbar-width: thin;
-    scrollbar-color: #1B1640 #0A0A0F; /* deep-indigo thumb / cosmic-black track */
+    scrollbar-color: #1b1640 #0a0a0f; /* deep-indigo thumb / cosmic-black track */
   }
 
   /* Webkit (Chrome, Edge, Safari) */
@@ -101,21 +114,21 @@
   }
 
   ::-webkit-scrollbar-track {
-    background: #0A0A0F; /* cosmic-black */
+    background: #0a0a0f; /* cosmic-black */
   }
 
   ::-webkit-scrollbar-thumb {
-    background: #1B1640; /* deep-indigo */
+    background: #1b1640; /* deep-indigo */
     border-radius: 4px;
-    border: 2px solid #0A0A0F; /* cosmic-black gap */
+    border: 2px solid #0a0a0f; /* cosmic-black gap */
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: #C9A84C; /* nebula-gold on hover */
+    background: #c9a84c; /* nebula-gold on hover */
   }
 
   ::-webkit-scrollbar-corner {
-    background: #0A0A0F;
+    background: #0a0a0f;
   }
 }
 
@@ -153,7 +166,12 @@
   /* Cosmic text gradient — used on hero headings */
   .text-gradient-gold {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, #C9A84C 0%, #FADA5E 50%, #C9A84C 100%);
+    background-image: linear-gradient(
+      135deg,
+      #c9a84c 0%,
+      #fada5e 50%,
+      #c9a84c 100%
+    );
   }
 
   /* Glassmorphism card effect */

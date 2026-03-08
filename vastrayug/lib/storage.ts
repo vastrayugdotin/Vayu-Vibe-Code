@@ -18,19 +18,19 @@ import {
   S3Client,
   PutObjectCommand,
   DeleteObjectCommand,
-} from '@aws-sdk/client-s3'
+} from "@aws-sdk/client-s3";
 
 const s3 = new S3Client({
   endpoint: process.env.STORAGE_ENDPOINT!,
-  region: 'auto',
+  region: "auto",
   credentials: {
     accessKeyId: process.env.STORAGE_ACCESS_KEY!,
     secretAccessKey: process.env.STORAGE_SECRET_KEY!,
   },
   forcePathStyle: true,
-})
+});
 
-const BUCKET = process.env.STORAGE_BUCKET_NAME!
+const BUCKET = process.env.STORAGE_BUCKET_NAME!;
 
 /**
  * Upload a file to Hostinger Object Storage.
@@ -43,7 +43,7 @@ const BUCKET = process.env.STORAGE_BUCKET_NAME!
 export async function uploadFile(
   key: string,
   buffer: Buffer,
-  contentType: string
+  contentType: string,
 ): Promise<string> {
   await s3.send(
     new PutObjectCommand({
@@ -51,12 +51,12 @@ export async function uploadFile(
       Key: key,
       Body: buffer,
       ContentType: contentType,
-      ACL: 'public-read',
-      CacheControl: 'max-age=31536000',
-    })
-  )
+      ACL: "public-read",
+      CacheControl: "max-age=31536000",
+    }),
+  );
 
-  return `${process.env.STORAGE_PUBLIC_URL}/${key}`
+  return `${process.env.STORAGE_PUBLIC_URL}/${key}`;
 }
 
 /**
@@ -69,6 +69,6 @@ export async function deleteFile(key: string): Promise<void> {
     new DeleteObjectCommand({
       Bucket: BUCKET,
       Key: key,
-    })
-  )
+    }),
+  );
 }

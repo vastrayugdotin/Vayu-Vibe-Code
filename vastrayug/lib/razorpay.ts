@@ -12,13 +12,13 @@
 //   const valid = verifyWebhookSignature(rawBody, req.headers['x-razorpay-signature'])
 // ─────────────────────────────────────────────────────────────
 
-import Razorpay from 'razorpay'
-import crypto from 'crypto'
+import Razorpay from "razorpay";
+import crypto from "crypto";
 
 export const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID!,
   key_secret: process.env.RAZORPAY_KEY_SECRET!,
-})
+});
 
 /**
  * Verify the signature on an incoming Razorpay webhook request.
@@ -30,17 +30,17 @@ export const razorpay = new Razorpay({
  */
 export function verifyWebhookSignature(
   body: string,
-  signature: string
+  signature: string,
 ): boolean {
   const expected = crypto
-    .createHmac('sha256', process.env.RAZORPAY_WEBHOOK_SECRET!)
+    .createHmac("sha256", process.env.RAZORPAY_WEBHOOK_SECRET!)
     .update(body)
-    .digest('hex')
+    .digest("hex");
 
   return crypto.timingSafeEqual(
-    Buffer.from(expected, 'hex'),
-    Buffer.from(signature, 'hex')
-  )
+    Buffer.from(expected, "hex"),
+    Buffer.from(signature, "hex"),
+  );
 }
 
 /**
@@ -55,16 +55,16 @@ export function verifyWebhookSignature(
 export function verifyPaymentSignature(
   orderId: string,
   paymentId: string,
-  signature: string
+  signature: string,
 ): boolean {
-  const body = orderId + '|' + paymentId
+  const body = orderId + "|" + paymentId;
   const expected = crypto
-    .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET!)
+    .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET!)
     .update(body)
-    .digest('hex')
+    .digest("hex");
 
   return crypto.timingSafeEqual(
-    Buffer.from(expected, 'hex'),
-    Buffer.from(signature, 'hex')
-  )
+    Buffer.from(expected, "hex"),
+    Buffer.from(signature, "hex"),
+  );
 }

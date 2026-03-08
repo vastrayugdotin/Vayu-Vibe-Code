@@ -1,23 +1,22 @@
-import * as React from "react"
-import { cn } from "@/lib/utils"
+import * as React from "react";
+import { cn } from "@/lib/utils";
 
-export interface InputProps
-  extends React.InputHTMLAttributes<HTMLInputElement> {
-  label?: string
-  error?: string
-  helperText?: string
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  label?: string;
+  error?: string;
+  helperText?: string;
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
   (
     { className, type = "text", label, error, helperText, id, ...props },
-    ref
+    ref,
   ) => {
     // Generate an ID if one wasn't provided so we can link label/input/error for accessibility
-    const generatedId = React.useId()
-    const inputId = id || generatedId
-    const errorId = `${inputId}-error`
-    const helperId = `${inputId}-helper`
+    const generatedId = React.useId();
+    const inputId = id || generatedId;
+    const errorId = `${inputId}-error`;
+    const helperId = `${inputId}-helper`;
 
     return (
       <div className="w-full">
@@ -38,7 +37,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
               error
                 ? "border-red-400 focus-visible:ring-red-400"
                 : "border-eclipse-silver/30",
-              className
+              className,
             )}
             ref={ref}
             aria-invalid={!!error}
@@ -58,17 +57,14 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           </p>
         )}
         {helperText && !error && (
-          <p
-            id={helperId}
-            className="mt-1.5 text-sm text-eclipse-silver"
-          >
+          <p id={helperId} className="mt-1.5 text-sm text-eclipse-silver">
             {helperText}
           </p>
         )}
       </div>
-    )
-  }
-)
-Input.displayName = "Input"
+    );
+  },
+);
+Input.displayName = "Input";
 
-export { Input }
+export { Input };

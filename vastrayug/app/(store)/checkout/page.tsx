@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import Link from "next/link";
 
 export default function CheckoutPage() {
   return (
@@ -12,7 +12,9 @@ export default function CheckoutPage() {
           Aligning Your Order
         </h2>
         <p className="font-body text-eclipse-silver mb-8 leading-relaxed">
-          The checkout flow including address collection, shipping calculation, and Razorpay integration is currently under construction and will be available in the next phase of our cosmic journey.
+          The checkout flow including address collection, shipping calculation,
+          and Razorpay integration is currently under construction and will be
+          available in the next phase of our cosmic journey.
         </p>
         <Link
           href="/cart"
@@ -22,5 +24,5 @@ export default function CheckoutPage() {
         </Link>
       </div>
     </div>
-  )
+  );
 }

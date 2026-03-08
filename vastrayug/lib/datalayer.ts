@@ -9,46 +9,46 @@
 // All functions are SSR-safe (no-op when window is undefined).
 // ─────────────────────────────────────────────────────────────
 
-import type { Decimal } from '@prisma/client/runtime/library'
+import type { Decimal } from "@prisma/client/runtime/library";
 
 // ── Types ────────────────────────────────────────────────────
 
 /** GA4 e-commerce item shape per Google's recommended schema. */
 export interface Ga4Item {
-  item_id: string
-  item_name: string
-  item_category: string
-  item_category2?: string
-  item_variant?: string
-  price: number
-  quantity?: number
+  item_id: string;
+  item_name: string;
+  item_category: string;
+  item_category2?: string;
+  item_variant?: string;
+  price: number;
+  quantity?: number;
   // Vastrayug cosmic extensions (GA4 custom dimensions)
-  item_planet?: string
-  item_zodiac?: string
-  item_collection?: string
+  item_planet?: string;
+  item_zodiac?: string;
+  item_collection?: string;
 }
 
 /** Payload for pushEvent — event name + arbitrary key-value data. */
 export interface DataLayerEvent {
-  event: string
-  [key: string]: unknown
+  event: string;
+  [key: string]: unknown;
 }
 
 /** Payload for pushEcommerceEvent — typed ecommerce object. */
 export interface EcommercePayload {
-  currency?: string
-  value?: number
-  transaction_id?: string
-  affiliation?: string
-  tax?: number
-  shipping?: number
-  coupon?: string
-  shipping_tier?: string
-  payment_type?: string
-  item_list_id?: string
-  item_list_name?: string
-  items?: Ga4Item[]
-  [key: string]: unknown
+  currency?: string;
+  value?: number;
+  transaction_id?: string;
+  affiliation?: string;
+  tax?: number;
+  shipping?: number;
+  coupon?: string;
+  shipping_tier?: string;
+  payment_type?: string;
+  item_list_id?: string;
+  item_list_name?: string;
+  items?: Ga4Item[];
+  [key: string]: unknown;
 }
 
 /**
@@ -57,21 +57,21 @@ export interface EcommercePayload {
  * `include: { category: true, subCategory: true, collections: { include: { collection: true } } }`.
  */
 export interface Ga4ProductInput {
-  id: string
-  title: string
-  price: Decimal | number
-  planet?: string | null
-  zodiacSign?: string | null
-  category?: { name: string } | null
-  subCategory?: { name: string } | null
-  collections?: Array<{ collection: { name: string } }> | null
+  id: string;
+  title: string;
+  price: Decimal | number;
+  planet?: string | null;
+  zodiacSign?: string | null;
+  category?: { name: string } | null;
+  subCategory?: { name: string } | null;
+  collections?: Array<{ collection: { name: string } }> | null;
 }
 
 /** Optional variant to merge into the GA4 item. */
 export interface Ga4VariantInput {
-  size: string
-  colour?: string | null
-  priceOverride?: Decimal | number | null
+  size: string;
+  colour?: string | null;
+  priceOverride?: Decimal | number | null;
 }
 
 // ── GA4 DataLayer Helpers ────────────────────────────────────
@@ -83,9 +83,9 @@ export interface Ga4VariantInput {
  *   pushEvent({ event: 'login', method: 'email' })
  */
 export function pushEvent(payload: DataLayerEvent): void {
-  if (typeof window === 'undefined') return
-  window.dataLayer = window.dataLayer || []
-  window.dataLayer.push(payload)
+  if (typeof window === "undefined") return;
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push(payload);
 }
 
 /**
@@ -101,12 +101,12 @@ export function pushEvent(payload: DataLayerEvent): void {
  */
 export function pushEcommerceEvent(
   event: string,
-  ecommerce: EcommercePayload
+  ecommerce: EcommercePayload,
 ): void {
-  if (typeof window === 'undefined') return
-  window.dataLayer = window.dataLayer || []
-  window.dataLayer.push({ ecommerce: null }) // Clear previous ecommerce data
-  window.dataLayer.push({ event, ecommerce })
+  if (typeof window === "undefined") return;
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push({ ecommerce: null }); // Clear previous ecommerce data
+  window.dataLayer.push({ event, ecommerce });
 }
 
 // ── Meta Pixel Helper ────────────────────────────────────────
@@ -120,10 +120,10 @@ export function pushEcommerceEvent(
  */
 export function pushPixelEvent(
   event: string,
-  data?: Record<string, unknown>
+  data?: Record<string, unknown>,
 ): void {
-  if (typeof window === 'undefined' || !window.fbq) return
-  window.fbq('track', event, data)
+  if (typeof window === "undefined" || !window.fbq) return;
+  window.fbq("track", event, data);
 }
 
 // ── GA4 Item Builder ─────────────────────────────────────────
@@ -138,36 +138,36 @@ export function pushPixelEvent(
  */
 export function buildGa4Item(
   product: Ga4ProductInput,
-  variant?: Ga4VariantInput
+  variant?: Ga4VariantInput,
 ): Ga4Item {
   const item: Ga4Item = {
     item_id: product.id,
     item_name: product.title,
-    item_category: product.category?.name ?? 'Uncategorized',
+    item_category: product.category?.name ?? "Uncategorized",
     price: Number(variant?.priceOverride ?? product.price),
-  }
+  };
 
   if (product.subCategory?.name) {
-    item.item_category2 = product.subCategory.name
+    item.item_category2 = product.subCategory.name;
   }
 
   if (variant) {
     item.item_variant = variant.colour
       ? `${variant.size} / ${variant.colour}`
-      : variant.size
+      : variant.size;
   }
 
   if (product.planet) {
-    item.item_planet = product.planet
+    item.item_planet = product.planet;
   }
 
   if (product.zodiacSign) {
-    item.item_zodiac = product.zodiacSign
+    item.item_zodiac = product.zodiacSign;
   }
 
   if (product.collections?.length) {
-    item.item_collection = product.collections[0].collection.name
+    item.item_collection = product.collections[0].collection.name;
   }
 
-  return item
+  return item;
 }

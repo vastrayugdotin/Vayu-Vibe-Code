@@ -1,10 +1,10 @@
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import StorefrontProviders from '@/components/store/layout/StorefrontProviders';
-import AnnouncementBar from '@/components/store/layout/AnnouncementBar';
-import Navbar from '@/components/store/layout/Navbar';
-import Footer from '@/components/store/layout/Footer';
-import PopupManager from '@/components/store/layout/PopupManager';
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import StorefrontProviders from "@/components/store/layout/StorefrontProviders";
+import AnnouncementBar from "@/components/store/layout/AnnouncementBar";
+import Navbar from "@/components/store/layout/Navbar";
+import Footer from "@/components/store/layout/Footer";
+import PopupManager from "@/components/store/layout/PopupManager";
 
 export default async function StoreLayout({
   children,
@@ -19,9 +19,7 @@ export default async function StoreLayout({
       <div className="flex flex-col min-h-screen">
         <AnnouncementBar />
         <Navbar />
-        <main className="flex-1">
-          {children}
-        </main>
+        <main className="flex-1">{children}</main>
         <Footer />
         <PopupManager />
       </div>

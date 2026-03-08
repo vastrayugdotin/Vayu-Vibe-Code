@@ -1,10 +1,10 @@
-import ProductCard from './ProductCard'
+import ProductCard from "./ProductCard";
 
 interface ProductGridProps {
-  products: any[] // We'll refine this type later when integrating Prisma
-  title?: string
-  subtitle?: string
-  viewAllLink?: string
+  products: any[]; // We'll refine this type later when integrating Prisma
+  title?: string;
+  subtitle?: string;
+  viewAllLink?: string;
 }
 
 export default function ProductGrid({
@@ -15,25 +15,27 @@ export default function ProductGrid({
 }: ProductGridProps) {
   if (!products || products.length === 0) {
     return (
-      <div className="py-12 text-center text-eclipse-silver font-body">
-        No products found in this collection yet.
+      <div className="flex h-64 items-center justify-center border border-dashed border-white/10 py-12">
+        <p className="font-body text-eclipse-silver">
+          No products found matching your cosmic alignment.
+        </p>
       </div>
-    )
+    );
   }
 
   return (
-    <section className="w-full py-12 md:py-20">
+    <section className="w-full py-6 md:py-8">
       {/* Optional Header */}
       {(title || subtitle) && (
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 md:mb-14">
+        <div className="mb-10 flex flex-col justify-between gap-6 md:mb-14 md:flex-row md:items-end">
           <div className="max-w-2xl">
             {title && (
-              <h2 className="font-heading text-heading-lg text-stardust-white tracking-wide mb-3">
+              <h2 className="mb-3 font-heading text-heading-lg tracking-wide text-stardust-white">
                 {title}
               </h2>
             )}
             {subtitle && (
-              <p className="font-body text-eclipse-silver text-lg">
+              <p className="font-body text-lg text-eclipse-silver">
                 {subtitle}
               </p>
             )}
@@ -42,10 +44,10 @@ export default function ProductGrid({
           {viewAllLink && (
             <a
               href={viewAllLink}
-              className="group inline-flex items-center gap-2 text-sm font-body tracking-widest text-nebula-gold uppercase hover:text-stardust-white transition-colors"
+              className="group inline-flex items-center gap-2 font-body text-sm uppercase tracking-widest text-nebula-gold transition-colors hover:text-stardust-white"
             >
               <span>View Collection</span>
-              <span className="w-6 h-[1px] bg-nebula-gold group-hover:bg-stardust-white transition-colors" />
+              <span className="h-[1px] w-6 bg-nebula-gold transition-colors group-hover:bg-stardust-white" />
             </a>
           )}
         </div>
@@ -53,7 +55,7 @@ export default function ProductGrid({
 
       {/* Grid */}
       <div
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8"
+        className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:gap-8 lg:grid-cols-3 xl:grid-cols-3"
         data-gtm-action="view_item_list"
       >
         {products.map((product, index) => (
@@ -64,5 +66,5 @@ export default function ProductGrid({
         ))}
       </div>
     </section>
-  )
+  );
 }

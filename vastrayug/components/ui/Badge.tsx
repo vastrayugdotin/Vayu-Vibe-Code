@@ -1,5 +1,5 @@
-import * as React from "react"
-import { cn } from "@/lib/utils"
+import * as React from "react";
+import { cn } from "@/lib/utils";
 
 export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?:
@@ -16,7 +16,7 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
     | "venus"
     | "saturn"
     | "rahu"
-    | "ketu"
+    | "ketu";
 }
 
 const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
@@ -42,8 +42,7 @@ const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
               variant === "sun",
             "border-transparent bg-gray-200/10 text-gray-200":
               variant === "moon",
-            "border-transparent bg-red-600/10 text-red-600":
-              variant === "mars",
+            "border-transparent bg-red-600/10 text-red-600": variant === "mars",
             "border-transparent bg-emerald-500/10 text-emerald-500":
               variant === "mercury",
             "border-transparent bg-yellow-500/10 text-yellow-500":
@@ -57,13 +56,13 @@ const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
             "border-transparent bg-stone-500/20 text-stone-400":
               variant === "ketu",
           },
-          className
+          className,
         )}
         {...props}
       />
-    )
-  }
-)
-Badge.displayName = "Badge"
+    );
+  },
+);
+Badge.displayName = "Badge";
 
-export { Badge }
+export { Badge };

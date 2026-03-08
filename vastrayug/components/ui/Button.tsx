@@ -1,11 +1,11 @@
-import * as React from "react"
-import { cn } from "@/lib/utils"
+import * as React from "react";
+import { cn } from "@/lib/utils";
+import { Spinner } from "@/components/ui/Spinner";
 
-export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "ghost" | "destructive"
-  size?: "sm" | "md" | "lg"
-  isLoading?: boolean
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: "primary" | "secondary" | "ghost" | "destructive";
+  size?: "sm" | "md" | "lg";
+  isLoading?: boolean;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
@@ -19,7 +19,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       disabled,
       ...props
     },
-    ref
+    ref,
   ) => {
     return (
       <button
@@ -42,18 +42,16 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             "h-10 px-4 py-2": size === "md",
             "h-11 rounded-md px-8": size === "lg",
           },
-          className
+          className,
         )}
         {...props}
       >
-        {isLoading && (
-          <Spinner className="mr-2 h-4 w-4" aria-hidden="true" />
-        )}
+        {isLoading && <Spinner className="mr-2 h-4 w-4" aria-hidden="true" />}
         {children}
       </button>
-    )
-  }
-)
-Button.displayName = "Button"
+    );
+  },
+);
+Button.displayName = "Button";
 
-export { Button }
+export { Button };

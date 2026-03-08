@@ -1,8 +1,8 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import Link from 'next/link'
-import { X } from 'lucide-react'
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { X } from "lucide-react";
 
 // ─────────────────────────────────────────────────────────────
 // AnnouncementBar — Top-of-site promotional strip
@@ -15,59 +15,61 @@ import { X } from 'lucide-react'
 // ─────────────────────────────────────────────────────────────
 
 interface AnnouncementData {
-  id: string
-  message: string
-  link_url: string | null
-  link_text: string | null
-  bg_colour: string
-  text_colour: string
+  id: string;
+  message: string;
+  link_url: string | null;
+  link_text: string | null;
+  bg_colour: string;
+  text_colour: string;
 }
 
 export default function AnnouncementBar() {
-  const [announcement, setAnnouncement] = useState<AnnouncementData | null>(null)
-  const [isDismissed, setIsDismissed] = useState(true) // Start true to prevent hydration mismatch/flicker
+  const [announcement, setAnnouncement] = useState<AnnouncementData | null>(
+    null,
+  );
+  const [isDismissed, setIsDismissed] = useState(true); // Start true to prevent hydration mismatch/flicker
 
   useEffect(() => {
     // Check session storage first
-    const dismissedKey = 'vastrayug_announcement_dismissed'
-    const hasDismissed = sessionStorage.getItem(dismissedKey)
+    const dismissedKey = "vastrayug_announcement_dismissed";
+    const hasDismissed = sessionStorage.getItem(dismissedKey);
 
-    if (hasDismissed === 'true') {
-      setIsDismissed(true)
-      return
+    if (hasDismissed === "true") {
+      setIsDismissed(true);
+      return;
     }
 
     // Fetch active announcement
     const fetchAnnouncement = async () => {
       try {
-        const res = await fetch('/api/storefront/announcements/active')
+        const res = await fetch("/api/storefront/announcements/active");
         if (res.ok) {
-          const data = await res.json()
+          const data = await res.json();
           if (data?.success && data.data) {
-            setAnnouncement(data.data)
-            setIsDismissed(false)
+            setAnnouncement(data.data);
+            setIsDismissed(false);
           }
         }
       } catch (error) {
         // Silently fail — announcement bar is non-critical
-        console.error('Failed to fetch announcement bar:', error)
+        console.error("Failed to fetch announcement bar:", error);
       }
-    }
+    };
 
-    fetchAnnouncement()
-  }, [])
+    fetchAnnouncement();
+  }, []);
 
   const handleDismiss = () => {
-    setIsDismissed(true)
-    sessionStorage.setItem('vastrayug_announcement_dismissed', 'true')
-  }
+    setIsDismissed(true);
+    sessionStorage.setItem("vastrayug_announcement_dismissed", "true");
+  };
 
   // Do not render anything if no announcement or if dismissed
-  if (!announcement || isDismissed) return null
+  if (!announcement || isDismissed) return null;
 
   // Ensure Fallback colours just in case DB values are missing
-  const bgColour = announcement.bg_colour || '#C9A84C' // default Nebula Gold
-  const textColour = announcement.text_colour || '#0A0A0F' // default Cosmic Black
+  const bgColour = announcement.bg_colour || "#C9A84C"; // default Nebula Gold
+  const textColour = announcement.text_colour || "#0A0A0F"; // default Cosmic Black
 
   return (
     <div
@@ -101,5 +103,5 @@ export default function AnnouncementBar() {
         <X className="w-4 h-4" />
       </button>
     </div>
-  )
+  );
 }

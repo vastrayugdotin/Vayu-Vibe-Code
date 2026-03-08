@@ -1,25 +1,108 @@
-import Link from 'next/link'
+import Link from "next/link";
 
 // Using the same list as the homepage mock
 const PLANETARY_COLLECTIONS = [
-  { name: 'Surya', title: 'The Surya Collection', planet: 'Sun', energy: 'Leadership & Vitality', color: 'from-[#D4A017]/30', slug: 'surya-collection' },
-  { name: 'Chandra', title: 'The Chandra Collection', planet: 'Moon', energy: 'Intuition & Emotion', color: 'from-[#B8D4E3]/30', slug: 'chandra-collection' },
-  { name: 'Mangal', title: 'The Mangal Collection', planet: 'Mars', energy: 'Power & Passion', color: 'from-[#8B0000]/30', slug: 'mangal-collection' },
-  { name: 'Budh', title: 'The Budh Collection', planet: 'Mercury', energy: 'Intelligence & Agility', color: 'from-[#50C878]/30', slug: 'budh-collection' },
-  { name: 'Guru', title: 'The Guru Collection', planet: 'Jupiter', energy: 'Wisdom & Abundance', color: 'from-[#FADA5E]/30', slug: 'guru-collection' },
-  { name: 'Shukra', title: 'The Shukra Collection', planet: 'Venus', energy: 'Love & Beauty', color: 'from-[#FFB6C1]/30', slug: 'shukra-collection' },
-  { name: 'Shani', title: 'The Shani Collection', planet: 'Saturn', energy: 'Discipline & Depth', color: 'from-[#191970]/30', slug: 'shani-collection' },
-  { name: 'Rahu', title: 'The Rahu Collection', planet: 'Rahu', energy: 'Transformation & Mystery', color: 'from-[#9400D3]/30', slug: 'rahu-collection' },
-  { name: 'Ketu', title: 'The Ketu Collection', planet: 'Ketu', energy: 'Liberation & Spirituality', color: 'from-[#800000]/30', slug: 'ketu-collection' },
-]
+  {
+    name: "Surya",
+    title: "The Surya Collection",
+    planet: "Sun",
+    energy: "Leadership & Vitality",
+    color: "from-[#D4A017]/30",
+    slug: "surya-collection",
+  },
+  {
+    name: "Chandra",
+    title: "The Chandra Collection",
+    planet: "Moon",
+    energy: "Intuition & Emotion",
+    color: "from-[#B8D4E3]/30",
+    slug: "chandra-collection",
+  },
+  {
+    name: "Mangal",
+    title: "The Mangal Collection",
+    planet: "Mars",
+    energy: "Power & Passion",
+    color: "from-[#8B0000]/30",
+    slug: "mangal-collection",
+  },
+  {
+    name: "Budh",
+    title: "The Budh Collection",
+    planet: "Mercury",
+    energy: "Intelligence & Agility",
+    color: "from-[#50C878]/30",
+    slug: "budh-collection",
+  },
+  {
+    name: "Guru",
+    title: "The Guru Collection",
+    planet: "Jupiter",
+    energy: "Wisdom & Abundance",
+    color: "from-[#FADA5E]/30",
+    slug: "guru-collection",
+  },
+  {
+    name: "Shukra",
+    title: "The Shukra Collection",
+    planet: "Venus",
+    energy: "Love & Beauty",
+    color: "from-[#FFB6C1]/30",
+    slug: "shukra-collection",
+  },
+  {
+    name: "Shani",
+    title: "The Shani Collection",
+    planet: "Saturn",
+    energy: "Discipline & Depth",
+    color: "from-[#191970]/30",
+    slug: "shani-collection",
+  },
+  {
+    name: "Rahu",
+    title: "The Rahu Collection",
+    planet: "Rahu",
+    energy: "Transformation & Mystery",
+    color: "from-[#9400D3]/30",
+    slug: "rahu-collection",
+  },
+  {
+    name: "Ketu",
+    title: "The Ketu Collection",
+    planet: "Ketu",
+    energy: "Liberation & Spirituality",
+    color: "from-[#800000]/30",
+    slug: "ketu-collection",
+  },
+];
 
 const VIBE_COLLECTIONS = [
-  { title: 'The Sovereign', energy: 'Power, authority, unbreakable confidence', slug: 'the-sovereign' },
-  { title: 'The Healer', energy: 'Softness, safety, grounding energy', slug: 'the-healer' },
-  { title: 'The Wanderer', energy: 'Freedom, openness, fluid exploration', slug: 'the-wanderer' },
-  { title: 'The Shadow', energy: 'Depth, introspection, embracing darkness', slug: 'the-shadow' },
-  { title: 'The Reborn', energy: 'Fresh start, hope, new chapter energy', slug: 'the-reborn' },
-]
+  {
+    title: "The Sovereign",
+    energy: "Power, authority, unbreakable confidence",
+    slug: "the-sovereign",
+  },
+  {
+    title: "The Healer",
+    energy: "Softness, safety, grounding energy",
+    slug: "the-healer",
+  },
+  {
+    title: "The Wanderer",
+    energy: "Freedom, openness, fluid exploration",
+    slug: "the-wanderer",
+  },
+  {
+    title: "The Shadow",
+    energy: "Depth, introspection, embracing darkness",
+    slug: "the-shadow",
+  },
+  {
+    title: "The Reborn",
+    energy: "Fresh start, hope, new chapter energy",
+    slug: "the-reborn",
+  },
+];
 
 export default function CollectionsPage() {
   return (
@@ -30,9 +113,10 @@ export default function CollectionsPage() {
           Cosmic Collections
         </h1>
         <p className="font-body text-eclipse-silver text-lg leading-relaxed">
-          Every Vastrayug product is built on the concept of frequency alignment.
-          Whether you connect deeply with your ruling Navagraha planet or an emotional vibe,
-          find the pieces that channel your inner universe.
+          Every Vastrayug product is built on the concept of frequency
+          alignment. Whether you connect deeply with your ruling Navagraha
+          planet or an emotional vibe, find the pieces that channel your inner
+          universe.
         </p>
       </div>
 
@@ -44,7 +128,8 @@ export default function CollectionsPage() {
             The Navagraha Architecture
           </h2>
           <p className="font-body text-eclipse-silver mt-4 max-w-2xl text-center">
-            Nine collections, each carrying the distinct frequency, color palette, and intention of its ruling celestial body.
+            Nine collections, each carrying the distinct frequency, color
+            palette, and intention of its ruling celestial body.
           </p>
         </div>
 
@@ -55,7 +140,9 @@ export default function CollectionsPage() {
               key={col.name}
               className="group relative aspect-[4/5] overflow-hidden bg-void-black border border-white/5 hover:border-nebula-gold/40 transition-colors duration-500"
             >
-              <div className={`absolute inset-0 bg-gradient-to-t ${col.color} to-transparent opacity-60 group-hover:opacity-100 transition-opacity duration-500`} />
+              <div
+                className={`absolute inset-0 bg-gradient-to-t ${col.color} to-transparent opacity-60 group-hover:opacity-100 transition-opacity duration-500`}
+              />
               <div className="absolute inset-0 bg-black/40 group-hover:bg-black/10 transition-colors duration-500" />
 
               <div className="absolute inset-0 p-8 flex flex-col justify-end text-center z-10">
@@ -85,8 +172,8 @@ export default function CollectionsPage() {
             Vibe & Energy Profiles
           </h2>
           <p className="font-body text-eclipse-silver mt-4 max-w-2xl text-center">
-            For individuals who connect more to an emotional state or desired frequency.
-            Dress the chapter you are entering.
+            For individuals who connect more to an emotional state or desired
+            frequency. Dress the chapter you are entering.
           </p>
         </div>
 
@@ -112,5 +199,5 @@ export default function CollectionsPage() {
         </div>
       </section>
     </div>
-  )
+  );
 }

@@ -1,57 +1,96 @@
 import { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
+import { notFound } from "next/navigation";
 import ProductGrid from "@/components/store/product/ProductGrid";
 
 export const revalidate = 300; // ISR: Revalidate every 5 minutes
 
-export async function generateMetadata(): Promise<Metadata> {
+export async function generateStaticParams() {
+  const categories = await prisma.category.findMany({
+    select: { slug: true },
+  });
+  return categories.map((category) => ({
+    slug: category.slug,
+  }));
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: { slug: string };
+}): Promise<Metadata> {
+  const category = await prisma.category.findUnique({
+    where: { slug: params.slug },
+  });
+
+  if (!category) {
+    return { title: "Category Not Found | Vastrayug" };
+  }
+
+  const title =
+    category.metaTitle || `${category.name} | Cosmic Apparel | Vastrayug`;
+  const description =
+    category.metaDescription ||
+    category.description ||
+    `Shop the premium ${category.name} collection at Vastrayug. Cosmic-inspired fashion blending astrology and luxury.`;
+
   return {
-    title: "Shop Cosmic Fashion India — Astrology Apparel | Vastrayug",
-    description:
-      "Explore the complete Vastrayug collection. Premium cosmic-inspired fashion blending astrology, Navagraha planetary energy, and luxury apparel.",
+    title,
+    description,
     alternates: {
-      canonical: "https://vastrayug.in/shop",
+      canonical: `https://vastrayug.in/category/${category.slug}`,
     },
     openGraph: {
-      title: "Shop Cosmic Fashion India — Astrology Apparel | Vastrayug",
-      description:
-        "Explore the complete Vastrayug collection. Premium cosmic-inspired fashion blending astrology, Navagraha planetary energy, and luxury apparel.",
-      url: "https://vastrayug.in/shop",
+      title,
+      description,
+      url: `https://vastrayug.in/category/${category.slug}`,
       type: "website",
+      ...(category.imageUrl && {
+        images: [{ url: category.imageUrl, alt: category.name }],
+      }),
     },
     twitter: {
       card: "summary_large_image",
-      title: "Shop Cosmic Fashion India — Astrology Apparel | Vastrayug",
-      description:
-        "Explore the complete Vastrayug collection. Premium cosmic-inspired fashion blending astrology, Navagraha planetary energy, and luxury apparel.",
+      title,
+      description,
+      ...(category.imageUrl && { images: [category.imageUrl] }),
     },
   };
 }
 
-export default async function ShopPage({
+export default async function CategoryPage({
+  params,
   searchParams,
 }: {
+  params: { slug: string };
   searchParams: { [key: string]: string | string[] | undefined };
 }) {
-  // Parsing search parameters
+  const category = await prisma.category.findUnique({
+    where: { slug: params.slug },
+  });
+
+  if (!category) {
+    notFound();
+  }
+
+  // Parse search parameters
   const planetFilter = searchParams.planet as string | undefined;
-  const categoryFilter = searchParams.category as string | undefined;
   const sortParam = searchParams.sort as string | undefined;
 
-  // Constructing prisma where clause
+  // Construct prisma where clause
   const whereClause: any = {
     status: "PUBLISHED",
+    categoryId: category.id,
   };
   if (planetFilter) whereClause.planet = planetFilter;
-  if (categoryFilter) whereClause.category = { slug: categoryFilter };
 
-  // Constructing prisma order clause
+  // Construct prisma order clause
   let orderByClause: any = { createdAt: "desc" };
   if (sortParam === "price-asc") orderByClause = { price: "asc" };
   if (sortParam === "price-desc") orderByClause = { price: "desc" };
   if (sortParam === "featured") orderByClause = { featured: "desc" };
 
-  // Fetching live data via Prisma
+  // Fetch filtered category products
   const products = await prisma.product.findMany({
     where: whereClause,
     orderBy: orderByClause,
@@ -80,13 +119,38 @@ export default async function ShopPage({
     },
   }));
 
-  // SEO JSON-LD implementation
-  const jsonLd = {
+  // Structured Data
+  const jsonLdBreadcrumb = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: "https://vastrayug.in",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Shop",
+        item: "https://vastrayug.in/shop",
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: category.name,
+        item: `https://vastrayug.in/category/${category.slug}`,
+      },
+    ],
+  };
+
+  const jsonLdItemList = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: "All Cosmic Apparel | Vastrayug",
-    description: "The complete Vastrayug collection of premium cosmic fashion.",
-    url: "https://vastrayug.in/shop",
+    name: category.name,
+    description: category.description || `Products in ${category.name}`,
+    url: `https://vastrayug.in/category/${category.slug}`,
     itemListElement: formattedProducts.map((product, idx) => ({
       "@type": "ListItem",
       position: idx + 1,
@@ -98,18 +162,29 @@ export default async function ShopPage({
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumb) }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdItemList) }}
+      />
+
       <div className="container mx-auto max-w-7xl px-4 py-8 md:py-12">
         {/* Header */}
         <div className="mx-auto mb-12 max-w-3xl text-center">
           <h1 className="mb-4 font-heading text-display-sm text-stardust-white md:text-display-md">
-            All Products
+            {category.name}
           </h1>
-          <p className="font-body text-lg text-eclipse-silver">
-            Discover pieces aligned with your cosmic frequency. Filter by your
-            ruling planet, zodiac sign, or life path number.
-          </p>
+          {category.description ? (
+            <p className="font-body text-lg text-eclipse-silver">
+              {category.description}
+            </p>
+          ) : (
+            <p className="font-body text-lg text-eclipse-silver">
+              Explore our premium collection of {category.name.toLowerCase()}{" "}
+              aligned with your cosmic frequency.
+            </p>
+          )}
         </div>
 
         <div className="flex flex-col gap-8 lg:flex-row">
@@ -121,16 +196,15 @@ export default async function ShopPage({
                   Filters
                 </h2>
                 <a
-                  href="/shop"
+                  href={`/category/${category.slug}`}
                   className="font-body text-xs uppercase tracking-widest text-eclipse-silver underline underline-offset-4 hover:text-nebula-gold"
                 >
                   Clear
                 </a>
               </div>
 
-              {/* Filter Categories */}
               <div className="space-y-8 font-body">
-                {/* Planets */}
+                {/* Planets Filter */}
                 <div>
                   <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-stardust-white">
                     Ruling Planet
@@ -151,8 +225,9 @@ export default async function ShopPage({
                       return (
                         <a
                           key={planet}
-                          href={`/shop?${new URLSearchParams({
-                            ...(categoryFilter && { category: categoryFilter }),
+                          href={`/category/${
+                            category.slug
+                          }?${new URLSearchParams({
                             ...(sortParam && { sort: sortParam }),
                             planet,
                           }).toString()}`}
@@ -183,58 +258,6 @@ export default async function ShopPage({
                     })}
                   </div>
                 </div>
-
-                <div className="h-[1px] bg-white/5" />
-
-                {/* Categories */}
-                <div>
-                  <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-stardust-white">
-                    Category
-                  </h3>
-                  <div className="space-y-3">
-                    {[
-                      { name: "Oversized Tees", slug: "oversized-tees" },
-                      { name: "Hoodies", slug: "hoodies" },
-                      { name: "Co-ord Sets", slug: "co-ord-sets" },
-                      { name: "Joggers", slug: "joggers" },
-                      { name: "Jackets", slug: "jackets" },
-                    ].map((cat) => {
-                      const isActive = categoryFilter === cat.slug;
-                      return (
-                        <a
-                          key={cat.slug}
-                          href={`/shop?${new URLSearchParams({
-                            ...(planetFilter && { planet: planetFilter }),
-                            ...(sortParam && { sort: sortParam }),
-                            category: cat.slug,
-                          }).toString()}`}
-                          className="group flex cursor-pointer items-center gap-3"
-                        >
-                          <div
-                            className={`flex h-4 w-4 items-center justify-center border transition-colors ${
-                              isActive
-                                ? "border-nebula-gold bg-nebula-gold"
-                                : "border-white/20 group-hover:border-nebula-gold"
-                            }`}
-                          >
-                            {isActive && (
-                              <span className="block h-2 w-2 bg-cosmic-black" />
-                            )}
-                          </div>
-                          <span
-                            className={`text-sm transition-colors ${
-                              isActive
-                                ? "text-stardust-white"
-                                : "text-eclipse-silver group-hover:text-stardust-white"
-                            }`}
-                          >
-                            {cat.name}
-                          </span>
-                        </a>
-                      );
-                    })}
-                  </div>
-                </div>
               </div>
             </div>
           </aside>
@@ -250,17 +273,9 @@ export default async function ShopPage({
                 <span className="font-body text-sm uppercase tracking-wider text-eclipse-silver">
                   Sort by:
                 </span>
-                {/* Note: In a Server Component, using pure links in a dropdown wrapper or form action is required. */}
-                <form action="/shop" method="GET">
+                <form action={`/category/${category.slug}`} method="GET">
                   {planetFilter && (
                     <input type="hidden" name="planet" value={planetFilter} />
-                  )}
-                  {categoryFilter && (
-                    <input
-                      type="hidden"
-                      name="category"
-                      value={categoryFilter}
-                    />
                   )}
                   <select
                     name="sort"
@@ -285,7 +300,7 @@ export default async function ShopPage({
               </div>
             </div>
 
-            {/* Grid */}
+            {/* Grid Component */}
             <ProductGrid products={formattedProducts} />
           </main>
         </div>

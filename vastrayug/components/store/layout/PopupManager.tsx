@@ -1,8 +1,8 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import Link from 'next/link'
-import { X } from 'lucide-react'
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { X } from "lucide-react";
 
 // ─────────────────────────────────────────────────────────────
 // PopupManager — Client-side popup orchestration
@@ -21,154 +21,159 @@ import { X } from 'lucide-react'
 // ─────────────────────────────────────────────────────────────
 
 interface PopupContent {
-  heading?: string
-  body?: string
-  image_url?: string
-  cta_text?: string
-  cta_link?: string
-  show_email_form?: boolean
-  email_placeholder?: string
-  submit_text?: string
+  heading?: string;
+  body?: string;
+  image_url?: string;
+  cta_text?: string;
+  cta_link?: string;
+  show_email_form?: boolean;
+  email_placeholder?: string;
+  submit_text?: string;
 }
 
 interface PopupData {
-  id: string
-  title: string
-  content_json: PopupContent
-  trigger_type: 'DELAY' | 'SCROLL_DEPTH' | 'EXIT_INTENT'
-  trigger_value: number
-  frequency: 'ONCE_SESSION' | 'ONCE_EVER' | 'EVERY_VISIT'
+  id: string;
+  title: string;
+  content_json: PopupContent;
+  trigger_type: "DELAY" | "SCROLL_DEPTH" | "EXIT_INTENT";
+  trigger_value: number;
+  frequency: "ONCE_SESSION" | "ONCE_EVER" | "EVERY_VISIT";
 }
 
 export default function PopupManager() {
-  const [popups, setPopups] = useState<PopupData[]>([])
-  const [activePopup, setActivePopup] = useState<PopupData | null>(null)
-  const [email, setEmail] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submitSuccess, setSubmitSuccess] = useState(false)
+  const [popups, setPopups] = useState<PopupData[]>([]);
+  const [activePopup, setActivePopup] = useState<PopupData | null>(null);
+  const [email, setEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
 
   useEffect(() => {
-    fetch('/api/storefront/popups')
+    fetch("/api/storefront/popups")
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (data?.success && data.data?.length) {
-          setPopups(data.data)
+          setPopups(data.data);
         }
       })
       .catch((err) => {
-        console.error('Failed to fetch popups:', err)
-      })
-  }, [])
+        console.error("Failed to fetch popups:", err);
+      });
+  }, []);
 
   useEffect(() => {
-    if (popups.length === 0) return
+    if (popups.length === 0) return;
 
-    const cleanups: (() => void)[] = []
+    const cleanups: (() => void)[] = [];
 
     for (const popup of popups) {
       // Check frequency — skip if already shown per rules
-      const storageKey = `vastrayug_popup_${popup.id}`
-      if (popup.frequency === 'ONCE_EVER' && localStorage.getItem(storageKey)) {
-        continue
+      const storageKey = `vastrayug_popup_${popup.id}`;
+      if (popup.frequency === "ONCE_EVER" && localStorage.getItem(storageKey)) {
+        continue;
       }
       if (
-        popup.frequency === 'ONCE_SESSION' &&
+        popup.frequency === "ONCE_SESSION" &&
         sessionStorage.getItem(storageKey)
       ) {
-        continue
+        continue;
       }
 
-      if (popup.trigger_type === 'DELAY') {
-        const timer = setTimeout(() => {
-          setActivePopup(popup)
-        }, (popup.trigger_value || 0) * 1000)
-        cleanups.push(() => clearTimeout(timer))
+      if (popup.trigger_type === "DELAY") {
+        const timer = setTimeout(
+          () => {
+            setActivePopup(popup);
+          },
+          (popup.trigger_value || 0) * 1000,
+        );
+        cleanups.push(() => clearTimeout(timer));
       }
 
-      if (popup.trigger_type === 'SCROLL_DEPTH') {
+      if (popup.trigger_type === "SCROLL_DEPTH") {
         const handler = () => {
           const scrollPercent =
             (window.scrollY /
               (document.documentElement.scrollHeight - window.innerHeight)) *
-            100
+            100;
           if (scrollPercent >= (popup.trigger_value || 0)) {
-            setActivePopup(popup)
-            window.removeEventListener('scroll', handler)
+            setActivePopup(popup);
+            window.removeEventListener("scroll", handler);
           }
-        }
-        window.addEventListener('scroll', handler, { passive: true })
-        cleanups.push(() => window.removeEventListener('scroll', handler))
+        };
+        window.addEventListener("scroll", handler, { passive: true });
+        cleanups.push(() => window.removeEventListener("scroll", handler));
       }
 
-      if (popup.trigger_type === 'EXIT_INTENT') {
+      if (popup.trigger_type === "EXIT_INTENT") {
         const handler = (e: MouseEvent) => {
           if (e.clientY <= 0) {
-            setActivePopup(popup)
-            document.removeEventListener('mouseleave', handler)
+            setActivePopup(popup);
+            document.removeEventListener("mouseleave", handler);
           }
-        }
-        document.addEventListener('mouseleave', handler)
-        cleanups.push(() => document.removeEventListener('mouseleave', handler))
+        };
+        document.addEventListener("mouseleave", handler);
+        cleanups.push(() =>
+          document.removeEventListener("mouseleave", handler),
+        );
       }
     }
 
-    return () => cleanups.forEach((fn) => fn())
-  }, [popups])
+    return () => cleanups.forEach((fn) => fn());
+  }, [popups]);
 
   // Prevent background scrolling when popup is open
   useEffect(() => {
     if (activePopup) {
-      document.body.style.overflow = 'hidden'
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = ''
+      document.body.style.overflow = "";
     }
     return () => {
-      document.body.style.overflow = ''
-    }
-  }, [activePopup])
+      document.body.style.overflow = "";
+    };
+  }, [activePopup]);
 
   function dismissPopup() {
-    if (!activePopup) return
-    const storageKey = `vastrayug_popup_${activePopup.id}`
-    if (activePopup.frequency === 'ONCE_EVER') {
-      localStorage.setItem(storageKey, '1')
+    if (!activePopup) return;
+    const storageKey = `vastrayug_popup_${activePopup.id}`;
+    if (activePopup.frequency === "ONCE_EVER") {
+      localStorage.setItem(storageKey, "1");
     }
-    if (activePopup.frequency === 'ONCE_SESSION') {
-      sessionStorage.setItem(storageKey, '1')
+    if (activePopup.frequency === "ONCE_SESSION") {
+      sessionStorage.setItem(storageKey, "1");
     }
-    setActivePopup(null)
-    setSubmitSuccess(false)
-    setEmail('')
+    setActivePopup(null);
+    setSubmitSuccess(false);
+    setEmail("");
   }
 
   const handleSubscribe = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!email) return
+    e.preventDefault();
+    if (!email) return;
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
     try {
-      const res = await fetch('/api/storefront/newsletter', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/storefront/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
-      })
+      });
 
       if (res.ok) {
-        setSubmitSuccess(true)
+        setSubmitSuccess(true);
         setTimeout(() => {
-          dismissPopup()
-        }, 3000)
+          dismissPopup();
+        }, 3000);
       }
     } catch (error) {
-      console.error('Newsletter subscription failed:', error)
+      console.error("Newsletter subscription failed:", error);
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
-  if (!activePopup) return null
+  if (!activePopup) return null;
 
-  const content = activePopup.content_json || {}
+  const content = activePopup.content_json || {};
 
   return (
     <div
@@ -202,10 +207,13 @@ export default function PopupManager() {
           </div>
         )}
 
-        <div className={`p-8 ${content.image_url ? 'pt-4' : 'pt-10'}`}>
+        <div className={`p-8 ${content.image_url ? "pt-4" : "pt-10"}`}>
           <div className="text-center mb-8">
             {content.heading && (
-              <h2 id="popup-title" className="font-heading text-3xl text-nebula-gold mb-4 tracking-wide">
+              <h2
+                id="popup-title"
+                className="font-heading text-3xl text-nebula-gold mb-4 tracking-wide"
+              >
                 {content.heading}
               </h2>
             )}
@@ -239,12 +247,15 @@ export default function PopupManager() {
                   disabled={isSubmitting}
                   className="w-full bg-nebula-gold text-cosmic-black font-semibold font-body py-3 rounded-md hover:bg-stardust-white transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
                 >
-                  {isSubmitting ? 'Aligning...' : (content.submit_text || 'Subscribe')}
+                  {isSubmitting
+                    ? "Aligning..."
+                    : content.submit_text || "Subscribe"}
                 </button>
               </form>
             )
           ) : (
-            content.cta_link && content.cta_text && (
+            content.cta_link &&
+            content.cta_text && (
               <Link
                 href={content.cta_link}
                 onClick={dismissPopup}
@@ -257,5 +268,5 @@ export default function PopupManager() {
         </div>
       </div>
     </div>
-  )
+  );
 }

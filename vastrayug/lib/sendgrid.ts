@@ -15,9 +15,9 @@
 // break the order flow or crash an API route.
 // ─────────────────────────────────────────────────────────────
 
-import sgMail from '@sendgrid/mail'
+import sgMail from "@sendgrid/mail";
 
-sgMail.setApiKey(process.env.SENDGRID_API_KEY!)
+sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
 
 /**
  * Send a transactional email via a SendGrid dynamic template.
@@ -29,23 +29,23 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY!)
 export async function sendTransactionalEmail(
   to: string,
   templateId: string,
-  dynamicData: Record<string, unknown>
+  dynamicData: Record<string, unknown>,
 ): Promise<void> {
   try {
     await sgMail.send({
       to,
       from: {
         email: process.env.SENDGRID_FROM_EMAIL!,
-        name: 'Vastrayug',
+        name: "Vastrayug",
       },
       templateId,
       dynamicTemplateData: dynamicData,
-    })
+    });
   } catch (error) {
     console.error(
-      '[SendGrid] Failed to send email',
+      "[SendGrid] Failed to send email",
       { to, templateId },
-      error instanceof Error ? error.message : error
-    )
+      error instanceof Error ? error.message : error,
+    );
   }
 }

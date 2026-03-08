@@ -9,36 +9,36 @@
 //   • Branded string types
 // ─────────────────────────────────────────────────────────────
 
-import type { Decimal } from '@prisma/client/runtime/library'
+import type { Decimal } from "@prisma/client/runtime/library";
 
 // ═════════════════════════════════════════════════════════════
 // API RESPONSE ENVELOPES
 // ═════════════════════════════════════════════════════════════
 
 export interface ApiSuccessResponse<T> {
-  success: true
-  data: T
+  success: true;
+  data: T;
 }
 
 export interface ApiErrorResponse {
-  success: false
-  error: string
-  code?: string
+  success: false;
+  error: string;
+  code?: string;
 }
 
-export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse
+export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;
 
 export interface PaginationMeta {
-  page: number
-  perPage: number
-  total: number
-  totalPages: number
+  page: number;
+  perPage: number;
+  total: number;
+  totalPages: number;
 }
 
 export interface PaginatedResponse<T> {
-  success: true
-  data: T[]
-  pagination: PaginationMeta
+  success: true;
+  data: T[];
+  pagination: PaginationMeta;
 }
 
 // ═════════════════════════════════════════════════════════════
@@ -46,93 +46,93 @@ export interface PaginatedResponse<T> {
 // ═════════════════════════════════════════════════════════════
 
 export interface CartItemProduct {
-  id: string
-  title: string
-  slug: string
-  price: number
-  compareAtPrice?: number | null
-  imageUrl?: string | null
+  id: string;
+  title: string;
+  slug: string;
+  price: number;
+  compareAtPrice?: number | null;
+  imageUrl?: string | null;
 }
 
 export interface CartItemVariant {
-  id: string
-  size: string
-  colour?: string | null
-  sku: string
-  stock: number
-  priceOverride?: number | null
+  id: string;
+  size: string;
+  colour?: string | null;
+  sku: string;
+  stock: number;
+  priceOverride?: number | null;
 }
 
 export interface CartItem {
-  id: string
-  product: CartItemProduct
-  variant: CartItemVariant
-  quantity: number
+  id: string;
+  product: CartItemProduct;
+  variant: CartItemVariant;
+  quantity: number;
 }
 
 export interface CartSummary {
-  items: CartItem[]
-  subtotal: number
-  discountAmount: number
-  couponCode: string | null
-  shippingCost: number
-  taxAmount: number
-  total: number
+  items: CartItem[];
+  subtotal: number;
+  discountAmount: number;
+  couponCode: string | null;
+  shippingCost: number;
+  taxAmount: number;
+  total: number;
 }
 
 // ═════════════════════════════════════════════════════════════
 // CHECKOUT TYPES
 // ═════════════════════════════════════════════════════════════
 
-export type CheckoutStep = 'address' | 'shipping' | 'payment' | 'confirmation'
+export type CheckoutStep = "address" | "shipping" | "payment" | "confirmation";
 
 export interface ShippingMethod {
-  id: string
-  name: string
-  description: string
-  price: number
-  estimatedDays: string
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  estimatedDays: string;
 }
 
 // ═════════════════════════════════════════════════════════════
 // ADMIN TABLE PARAMS
 // ═════════════════════════════════════════════════════════════
 
-export type SortDirection = 'asc' | 'desc'
+export type SortDirection = "asc" | "desc";
 
 export interface SortParam {
-  field: string
-  direction: SortDirection
+  field: string;
+  direction: SortDirection;
 }
 
 export interface PaginationParam {
-  page: number
-  perPage: number
+  page: number;
+  perPage: number;
 }
 
 export interface DateRangeParam {
-  from?: string
-  to?: string
+  from?: string;
+  to?: string;
 }
 
 export interface AdminListParams {
-  pagination: PaginationParam
-  sort?: SortParam
-  search?: string
-  filters?: Record<string, string | string[] | boolean>
-  dateRange?: DateRangeParam
+  pagination: PaginationParam;
+  sort?: SortParam;
+  search?: string;
+  filters?: Record<string, string | string[] | boolean>;
+  dateRange?: DateRangeParam;
 }
 
 // ═════════════════════════════════════════════════════════════
 // BRANDED STRING TYPES
 // ═════════════════════════════════════════════════════════════
 
-declare const __brand: unique symbol
+declare const __brand: unique symbol;
 
-type Brand<T, B extends string> = T & { readonly [__brand]: B }
+type Brand<T, B extends string> = T & { readonly [__brand]: B };
 
-export type Slug = Brand<string, 'Slug'>
-export type Cuid = Brand<string, 'Cuid'>
+export type Slug = Brand<string, "Slug">;
+export type Cuid = Brand<string, "Cuid">;
 
 // ═════════════════════════════════════════════════════════════
 // UTILITY TYPES
@@ -146,25 +146,25 @@ export type SerializedDecimal<T> = {
       ? number | null
       : T[K] extends object
         ? SerializedDecimal<T[K]>
-        : T[K]
-}
+        : T[K];
+};
 
 /** Extract the `data` field type from an ApiSuccessResponse. */
-export type ExtractData<T> = T extends ApiSuccessResponse<infer D> ? D : never
+export type ExtractData<T> = T extends ApiSuccessResponse<infer D> ? D : never;
 
 // ═════════════════════════════════════════════════════════════
 // NAV TYPES (Admin sidebar)
 // ═════════════════════════════════════════════════════════════
 
 export interface AdminNavItem {
-  label: string
-  href: string
-  icon: string
-  allowedRoles: string[]
-  badge?: number
+  label: string;
+  href: string;
+  icon: string;
+  allowedRoles: string[];
+  badge?: number;
 }
 
 export interface AdminNavSection {
-  title: string
-  items: AdminNavItem[]
+  title: string;
+  items: AdminNavItem[];
 }

@@ -1,58 +1,83 @@
-import Link from 'next/link'
-import ProductGrid from '@/components/store/product/ProductGrid'
+import Link from "next/link";
+import ProductGrid from "@/components/store/product/ProductGrid";
 
 // Mock Data specific to a collection
 const MOCK_COLLECTION = {
-  id: 'col_sun',
-  name: 'Sun — Surya Collection',
-  title: 'The Surya Collection',
-  slug: 'surya-collection',
-  type: 'PLANETARY',
-  planet: 'Sun',
-  description: 'Radiant garments channelling the sovereign energy of Surya — warmth, authority, and self-expression. Step into the light and embrace the leader within.',
-  colourPaletteJson: { primary: '#D4A017', secondary: '#F4622C', accent: '#FADA5E' },
-}
+  id: "col_sun",
+  name: "Sun — Surya Collection",
+  title: "The Surya Collection",
+  slug: "surya-collection",
+  type: "PLANETARY",
+  planet: "Sun",
+  description:
+    "Radiant garments channelling the sovereign energy of Surya — warmth, authority, and self-expression. Step into the light and embrace the leader within.",
+  colourPaletteJson: {
+    primary: "#D4A017",
+    secondary: "#F4622C",
+    accent: "#FADA5E",
+  },
+};
 
 const MOCK_PRODUCTS = [
   {
-    id: 'prod_sun_1',
-    title: 'Surya Sovereign Oversized Tee',
-    slug: 'surya-sovereign-oversized-tee',
+    id: "prod_sun_1",
+    title: "Surya Sovereign Oversized Tee",
+    slug: "surya-sovereign-oversized-tee",
     price: 2499,
     compare_at_price: 3499,
-    planet: 'Sun',
-    zodiac_sign: 'Leo',
-    category: { name: 'Oversized Tees', slug: 'oversized-tees' },
+    planet: "Sun",
+    zodiac_sign: "Leo",
+    category: { name: "Oversized Tees", slug: "oversized-tees" },
     stock: 15,
     images: [
-      { url: 'https://placehold.co/800x1200/1B1640/F4F1EC?text=Surya+Tee+1', alt: 'Front', is_primary: true },
-      { url: 'https://placehold.co/800x1200/0A0A0F/C9A84C?text=Surya+Tee+2', alt: 'Back', is_primary: false },
+      {
+        url: "https://placehold.co/800x1200/1B1640/F4F1EC?text=Surya+Tee+1",
+        alt: "Front",
+        is_primary: true,
+      },
+      {
+        url: "https://placehold.co/800x1200/0A0A0F/C9A84C?text=Surya+Tee+2",
+        alt: "Back",
+        is_primary: false,
+      },
     ],
   },
   {
-    id: 'prod_sun_2',
-    title: 'Solar Radiance Hoodie',
-    slug: 'solar-radiance-hoodie',
+    id: "prod_sun_2",
+    title: "Solar Radiance Hoodie",
+    slug: "solar-radiance-hoodie",
     price: 4999,
-    planet: 'Sun',
-    zodiac_sign: 'Aries',
-    category: { name: 'Hoodies', slug: 'hoodies' },
+    planet: "Sun",
+    zodiac_sign: "Aries",
+    category: { name: "Hoodies", slug: "hoodies" },
     stock: 8,
     images: [
-      { url: 'https://placehold.co/800x1200/D4A017/0A0A0F?text=Surya+Hoodie+1', alt: 'Front', is_primary: true },
-      { url: 'https://placehold.co/800x1200/F4622C/F4F1EC?text=Surya+Hoodie+2', alt: 'Detail', is_primary: false },
+      {
+        url: "https://placehold.co/800x1200/D4A017/0A0A0F?text=Surya+Hoodie+1",
+        alt: "Front",
+        is_primary: true,
+      },
+      {
+        url: "https://placehold.co/800x1200/F4622C/F4F1EC?text=Surya+Hoodie+2",
+        alt: "Detail",
+        is_primary: false,
+      },
     ],
   },
-]
+];
 
-export default function CollectionDetailPage({ params }: { params: { slug: string } }) {
+export default function CollectionDetailPage({
+  params,
+}: {
+  params: { slug: string };
+}) {
   // In a real application, fetch collection metadata and products from DB using params.slug
-  const collection = MOCK_COLLECTION
-  const products = MOCK_PRODUCTS
+  const collection = MOCK_COLLECTION;
+  const products = MOCK_PRODUCTS;
 
   // Dynamic banner styles based on DB colour palette
-  const primaryColor = collection.colourPaletteJson?.primary || '#C9A84C'
-  const bannerGradient = `linear-gradient(135deg, ${primaryColor}20 0%, #0A0A0F 100%)`
+  const primaryColor = collection.colourPaletteJson?.primary || "#C9A84C";
+  const bannerGradient = `linear-gradient(135deg, ${primaryColor}20 0%, #0A0A0F 100%)`;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -65,7 +90,10 @@ export default function CollectionDetailPage({ params }: { params: { slug: strin
 
         <div className="relative z-10 text-center max-w-3xl mx-auto px-4">
           {collection.planet && (
-            <span className="text-xs font-body tracking-[0.3em] uppercase mb-4 block" style={{ color: primaryColor }}>
+            <span
+              className="text-xs font-body tracking-[0.3em] uppercase mb-4 block"
+              style={{ color: primaryColor }}
+            >
               Ruling Planet: {collection.planet}
             </span>
           )}
@@ -83,11 +111,31 @@ export default function CollectionDetailPage({ params }: { params: { slug: strin
         {/* Breadcrumbs */}
         <nav className="flex text-sm text-eclipse-silver font-body mb-8">
           <ol className="flex items-center gap-2">
-            <li><Link href="/" className="hover:text-nebula-gold transition-colors">Home</Link></li>
-            <li><span className="text-white/20">/</span></li>
-            <li><Link href="/collections" className="hover:text-nebula-gold transition-colors">Collections</Link></li>
-            <li><span className="text-white/20">/</span></li>
-            <li className="text-stardust-white truncate" aria-current="page">{collection.title}</li>
+            <li>
+              <Link
+                href="/"
+                className="hover:text-nebula-gold transition-colors"
+              >
+                Home
+              </Link>
+            </li>
+            <li>
+              <span className="text-white/20">/</span>
+            </li>
+            <li>
+              <Link
+                href="/collections"
+                className="hover:text-nebula-gold transition-colors"
+              >
+                Collections
+              </Link>
+            </li>
+            <li>
+              <span className="text-white/20">/</span>
+            </li>
+            <li className="text-stardust-white truncate" aria-current="page">
+              {collection.title}
+            </li>
           </ol>
         </nav>
 
@@ -97,12 +145,22 @@ export default function CollectionDetailPage({ params }: { params: { slug: strin
             Showing {products.length} cosmic artifacts
           </span>
           <div className="flex items-center gap-2 w-full sm:w-auto">
-            <span className="text-sm text-eclipse-silver font-body uppercase tracking-wider hidden sm:inline">Sort by:</span>
+            <span className="text-sm text-eclipse-silver font-body uppercase tracking-wider hidden sm:inline">
+              Sort by:
+            </span>
             <select className="bg-transparent text-sm text-stardust-white border border-white/20 sm:border-none outline-none font-body uppercase tracking-wider cursor-pointer focus:ring-0 p-2 sm:p-0 w-full sm:w-auto">
-              <option value="featured" className="bg-cosmic-black">Featured</option>
-              <option value="newest" className="bg-cosmic-black">Newest Arrivals</option>
-              <option value="price-asc" className="bg-cosmic-black">Price: Low to High</option>
-              <option value="price-desc" className="bg-cosmic-black">Price: High to Low</option>
+              <option value="featured" className="bg-cosmic-black">
+                Featured
+              </option>
+              <option value="newest" className="bg-cosmic-black">
+                Newest Arrivals
+              </option>
+              <option value="price-asc" className="bg-cosmic-black">
+                Price: Low to High
+              </option>
+              <option value="price-desc" className="bg-cosmic-black">
+                Price: High to Low
+              </option>
             </select>
           </div>
         </div>
@@ -111,5 +169,5 @@ export default function CollectionDetailPage({ params }: { params: { slug: strin
         <ProductGrid products={products} />
       </div>
     </div>
-  )
+  );
 }
