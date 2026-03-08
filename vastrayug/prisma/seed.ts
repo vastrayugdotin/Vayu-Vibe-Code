@@ -157,7 +157,7 @@ async function main() {
       create: {
         ...col,
         planet: null,
-        colourPaletteJson: null,
+        colourPaletteJson: {},
       },
     })
   }
