@@ -1,5 +1,8 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
-import { Instagram, Facebook, Twitter, Phone as WhatsApp } from "lucide-react";
+import { Instagram, Facebook, Twitter, Phone as WhatsApp, Loader2 } from "lucide-react";
 
 const FOOTER_LINKS = {
   shop: [
@@ -64,6 +67,38 @@ function PinterestIcon({ className }: { className?: string }) {
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [message, setMessage] = useState("");
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+
+    setStatus("loading");
+    try {
+      const res = await fetch("/api/storefront/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, source: "footer" }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setStatus("success");
+        setMessage(data.message || "Welcome to the cosmic circle.");
+        setEmail("");
+      } else {
+        setStatus("error");
+        setMessage(data.message || "Something went wrong. Please try again.");
+      }
+    } catch (error) {
+      console.error("Newsletter subscription failed:", error);
+      setStatus("error");
+      setMessage("Connection error. Please try again.");
+    }
+  };
 
   return (
     <footer className="bg-void-black border-t border-white/10 pt-16 pb-8">
@@ -90,19 +125,38 @@ export default function Footer() {
                 Subscribe for planetary insights, early access to drops, and
                 exclusive offers.
               </p>
-              <form className="flex gap-2" onSubmit={(e) => e.preventDefault()}>
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="flex-1 bg-cosmic-black border border-white/10 rounded-md px-4 py-2 text-sm text-stardust-white focus:outline-none focus:border-nebula-gold transition-colors font-body"
-                  required
-                />
-                <button
-                  type="submit"
-                  className="bg-nebula-gold text-cosmic-black px-6 py-2 rounded-md text-sm font-semibold hover:bg-stardust-white transition-colors font-body"
-                >
-                  Subscribe
-                </button>
+              <form className="flex flex-col gap-2" onSubmit={handleSubscribe}>
+                <div className="flex gap-2">
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter your email"
+                    className="flex-1 bg-cosmic-black border border-white/10 rounded-md px-4 py-2 text-sm text-stardust-white focus:outline-none focus:border-nebula-gold transition-colors font-body disabled:opacity-50"
+                    required
+                    disabled={status === "loading"}
+                  />
+                  <button
+                    type="submit"
+                    disabled={status === "loading"}
+                    className="bg-nebula-gold text-cosmic-black px-6 py-2 rounded-md text-sm font-semibold hover:bg-stardust-white transition-colors font-body disabled:opacity-50 flex items-center justify-center min-w-[100px]"
+                  >
+                    {status === "loading" ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      "Subscribe"
+                    )}
+                  </button>
+                </div>
+                {status !== "idle" && (
+                  <p
+                    className={`text-xs mt-2 font-body ${
+                      status === "success" ? "text-budh-emerald" : "text-red-400"
+                    }`}
+                  >
+                    {message}
+                  </p>
+                )}
               </form>
             </div>
           </div>

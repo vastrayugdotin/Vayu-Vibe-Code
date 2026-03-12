@@ -2,9 +2,13 @@ import { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import ProductGrid from "@/components/store/product/ProductGrid";
+import FilterSidebar from "@/components/store/product/FilterSidebar";
+import ActiveFilters from "@/components/store/product/ActiveFilters";
+import SortDropdown from "@/components/store/product/SortDropdown";
+import Pagination from "@/components/store/product/Pagination";
 import CollectionHero from "@/components/store/collection/CollectionHero";
 
-export const revalidate = 300; // ISR: Revalidate every 5 minutes
+export const revalidate = 300;
 
 export async function generateStaticParams() {
   const collections = await prisma.collection.findMany({
@@ -25,37 +29,19 @@ export async function generateMetadata({
     where: { slug: params.slug },
   });
 
-  if (!collection) {
-    return { title: "Collection Not Found | Vastrayug" };
-  }
+  if (!collection) return { title: "Collection Not Found | Vastrayug" };
 
-  const title =
-    collection.metaTitle || `${collection.name} | Cosmic Apparel | Vastrayug`;
-  const description =
-    collection.metaDescription ||
-    collection.description ||
-    `Shop the premium ${collection.name} collection at Vastrayug. Cosmic-inspired fashion blending astrology and luxury.`;
-
+  const title = collection.metaTitle || `${collection.name} | Cosmic Apparel | Vastrayug`;
   return {
     title,
-    description,
-    alternates: {
-      canonical: `https://vastrayug.in/collection/${collection.slug}`,
-    },
+    description: collection.metaDescription || collection.description || `Shop the premium ${collection.name} collection at Vastrayug.`,
+    alternates: { canonical: `https://vastrayug.in/collection/${collection.slug}` },
     openGraph: {
       title,
-      description,
+      description: collection.metaDescription || collection.description,
       url: `https://vastrayug.in/collection/${collection.slug}`,
       type: "website",
-      ...(collection.imageUrl && {
-        images: [{ url: collection.imageUrl, alt: collection.name }],
-      }),
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-      ...(collection.imageUrl && { images: [collection.imageUrl] }),
+      ...(collection.imageUrl && { images: [{ url: collection.imageUrl, alt: collection.name }] }),
     },
   };
 }
@@ -69,64 +55,71 @@ export default async function CollectionPage({
 }) {
   const collection = await prisma.collection.findUnique({
     where: { slug: params.slug },
-    include: {
-      products: {
-        include: {
-          product: {
-            include: {
-              images: {
-                where: { isPrimary: true },
-                take: 1,
-              },
-              category: true,
-            },
-          },
-        },
-      },
-    },
   });
 
-  if (!collection) {
-    notFound();
+  if (!collection) notFound();
+
+  // --- Parse Parameters ---
+  const page = Number(searchParams.page) || 1;
+  const pageSize = 12;
+
+  const categories = (searchParams.category as string)?.split(",") || [];
+  const planets = (searchParams.planet as string)?.split(",") || [];
+  const zodiacs = (searchParams.zodiac as string)?.split(",") || [];
+  const sizes = (searchParams.size as string)?.split(",") || [];
+  const minPrice = Number(searchParams.minPrice) || 0;
+  const maxPrice = Number(searchParams.maxPrice) || 100000;
+  const sort = (searchParams.sort as string) || "newest";
+
+  // --- Build Prisma Query ---
+  const where: any = {
+    status: "PUBLISHED",
+    collections: { some: { collectionId: collection.id } },
+    price: { gte: minPrice, lte: maxPrice },
+  };
+
+  if (categories.length > 0) where.category = { slug: { in: categories } };
+  if (planets.length > 0) where.planet = { in: planets.map(p => p.toUpperCase()) };
+  if (zodiacs.length > 0) where.zodiacSign = { in: zodiacs.map(z => z.toUpperCase()) };
+
+  if (sizes.length > 0) {
+    where.variants = {
+      some: {
+        size: { in: sizes },
+        isActive: true,
+      }
+    };
   }
 
-  // Parse search parameters
-  const categoryFilter = searchParams.category as string | undefined;
-  const sortParam = searchParams.sort as string | undefined;
+  let orderBy: any = { createdAt: "desc" };
+  if (sort === "price-asc") orderBy = { price: "asc" };
+  if (sort === "price-desc") orderBy = { price: "desc" };
+  if (sort === "popularity") orderBy = { orderItems: { _count: "desc" } };
 
-  // The products are loaded via the junction table ProductCollection
-  // We extract and filter them in memory since they are already joined
-  let products = collection.products
-    .map((pc) => pc.product)
-    .filter((p) => p.status === "PUBLISHED");
+  // --- Fetch Data ---
+  const [products, totalCount] = await Promise.all([
+    prisma.product.findMany({
+      where,
+      orderBy,
+      include: {
+        images: { orderBy: { sortOrder: "asc" } },
+        category: true,
+        collections: { include: { collection: true }, take: 1 },
+      },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }),
+    prisma.product.count({ where }),
+  ]);
 
-  if (categoryFilter) {
-    products = products.filter((p) => p.category?.slug === categoryFilter);
-  }
-
-  // Apply sorting
-  if (sortParam === "price-asc") {
-    products.sort((a, b) => Number(a.price) - Number(b.price));
-  } else if (sortParam === "price-desc") {
-    products.sort((a, b) => Number(b.price) - Number(a.price));
-  } else if (sortParam === "featured") {
-    products.sort((a, b) =>
-      a.featured === b.featured ? 0 : a.featured ? -1 : 1,
-    );
-  } else {
-    // Default to newest
-    products.sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    );
-  }
+  const totalPages = Math.ceil(totalCount / pageSize);
 
   // Format products for ProductCard
   const formattedProducts = products.map((p) => ({
     ...p,
     price: Number(p.price),
     compare_at_price: p.compareAtPrice ? Number(p.compareAtPrice) : null,
-    images: p.images.map((img) => ({
+    images: p.images.map((img: any) => ({
       url: img.url,
       alt: img.altText || p.title,
       is_primary: img.isPrimary,
@@ -135,85 +128,15 @@ export default async function CollectionPage({
       name: p.category?.name || "Uncategorized",
       slug: p.category?.slug || "uncategorized",
     },
+    collection_name: p.collections[0]?.collection.name,
   }));
 
-  // Determine dynamic accent color for Planetary Collections
-  // Default to nebula-gold logic
-  let accentBorder = "border-nebula-gold";
-  let accentText = "text-nebula-gold";
-
-  if (collection.type === "PLANETARY" && collection.planet) {
-    switch (collection.planet) {
-      case "SUN":
-        accentBorder = "border-surya-gold";
-        accentText = "text-surya-gold";
-        break;
-      case "MOON":
-        accentBorder = "border-chandra-pearl";
-        accentText = "text-chandra-pearl";
-        break;
-      case "MARS":
-        accentBorder = "border-mangal-red";
-        accentText = "text-mangal-red";
-        break;
-      case "MERCURY":
-        accentBorder = "border-budh-emerald";
-        accentText = "text-budh-emerald";
-        break;
-      case "JUPITER":
-        accentBorder = "border-guru-yellow";
-        accentText = "text-guru-yellow";
-        break;
-      case "VENUS":
-        accentBorder = "border-shukra-blush";
-        accentText = "text-shukra-blush";
-        break;
-      case "SATURN":
-        accentBorder = "border-shani-indigo";
-        accentText = "text-shani-indigo";
-        break;
-      case "RAHU":
-        accentBorder = "border-rahu-violet";
-        accentText = "text-rahu-violet";
-        break;
-      case "KETU":
-        accentBorder = "border-ketu-maroon";
-        accentText = "text-ketu-maroon";
-        break;
-    }
-  }
-
   // Structured Data
-  const jsonLdBreadcrumb = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: [
-      {
-        "@type": "ListItem",
-        position: 1,
-        name: "Home",
-        item: "https://vastrayug.in",
-      },
-      {
-        "@type": "ListItem",
-        position: 2,
-        name: "Collections",
-        item: "https://vastrayug.in/collection",
-      },
-      {
-        "@type": "ListItem",
-        position: 3,
-        name: collection.name,
-        item: `https://vastrayug.in/collection/${collection.slug}`,
-      },
-    ],
-  };
-
-  const jsonLdItemList = {
+  const jsonLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
     name: collection.name,
-    description: collection.description || `Products in ${collection.name}`,
+    description: collection.description,
     url: `https://vastrayug.in/collection/${collection.slug}`,
     itemListElement: formattedProducts.map((product, idx) => ({
       "@type": "ListItem",
@@ -222,150 +145,34 @@ export default async function CollectionPage({
     })),
   };
 
-  // Generate unique categories inside this collection for sidebar filter mapping
-  const collectionCategories = Array.from(
-    new Map(
-      products
-        .filter((p) => p.category)
-        .map((p) => [p.category!.slug, p.category!]),
-    ).values(),
-  );
-
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumb) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdItemList) }}
-      />
-
       <CollectionHero
         name={collection.name}
         description={collection.description}
         type={collection.type}
         planet={collection.planet}
-        accentTextClass={accentText}
-        accentBgClass={accentText.replace("text-", "bg-")}
       />
 
       <div className="container mx-auto max-w-7xl px-4 py-8 md:py-12">
-        <div className="flex flex-col gap-8 lg:flex-row">
-          {/* Sidebar Filters */}
-          <aside className="w-full flex-shrink-0 lg:w-64">
-            <div className="sticky top-24 border border-white/5 bg-void-black p-6">
-              <div className="mb-6 flex items-center justify-between">
-                <h2 className="font-heading text-xl uppercase tracking-widest text-stardust-white">
-                  Filters
-                </h2>
-                <a
-                  href={`/collection/${collection.slug}`}
-                  className="font-body text-xs uppercase tracking-widest text-eclipse-silver underline underline-offset-4 hover:text-nebula-gold"
-                >
-                  Clear
-                </a>
-              </div>
+        <div className="flex flex-col gap-10 lg:flex-row">
+          <FilterSidebar />
 
-              <div className="space-y-8 font-body">
-                {/* Categories Filter specific to this collection */}
-                {collectionCategories.length > 0 && (
-                  <div>
-                    <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-stardust-white">
-                      Category
-                    </h3>
-                    <div className="space-y-3">
-                      {collectionCategories.map((cat) => {
-                        const isActive = categoryFilter === cat.slug;
-                        return (
-                          <a
-                            key={cat.slug}
-                            href={`/collection/${
-                              collection.slug
-                            }?${new URLSearchParams({
-                              ...(sortParam && { sort: sortParam }),
-                              category: cat.slug,
-                            }).toString()}`}
-                            className="group flex cursor-pointer items-center gap-3"
-                          >
-                            <div
-                              className={`flex h-4 w-4 items-center justify-center border transition-colors ${
-                                isActive
-                                  ? `${accentBorder} ${accentText.replace(
-                                      "text-",
-                                      "bg-",
-                                    )}`
-                                  : "border-white/20 group-hover:border-white/50"
-                              }`}
-                            >
-                              {isActive && (
-                                <span className="block h-2 w-2 bg-cosmic-black" />
-                              )}
-                            </div>
-                            <span
-                              className={`text-sm transition-colors ${
-                                isActive
-                                  ? "text-stardust-white"
-                                  : "text-eclipse-silver group-hover:text-stardust-white"
-                              }`}
-                            >
-                              {cat.name}
-                            </span>
-                          </a>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </aside>
-
-          {/* Product Grid */}
           <main className="flex-1">
-            {/* Toolbar */}
-            <div className="mb-6 flex items-center justify-between border-b border-white/5 pb-4">
+            <div className="mb-8 flex flex-col justify-between gap-4 border-b border-white/5 pb-6 md:flex-row md:items-center">
               <span className="font-body text-sm text-eclipse-silver">
-                Showing {products.length} products
+                Showing <span className="text-stardust-white font-medium">{formattedProducts.length}</span> of {totalCount} results
               </span>
-              <div className="flex items-center gap-2">
-                <span className="font-body text-sm uppercase tracking-wider text-eclipse-silver">
-                  Sort by:
-                </span>
-                <form action={`/collection/${collection.slug}`} method="GET">
-                  {categoryFilter && (
-                    <input
-                      type="hidden"
-                      name="category"
-                      value={categoryFilter}
-                    />
-                  )}
-                  <select
-                    name="sort"
-                    defaultValue={sortParam || "newest"}
-                    onChange={(e) => e.target.form?.submit()}
-                    className="cursor-pointer border-none bg-transparent font-body text-sm uppercase tracking-wider text-stardust-white outline-none focus:ring-0"
-                  >
-                    <option value="newest" className="bg-cosmic-black">
-                      Newest Arrivals
-                    </option>
-                    <option value="featured" className="bg-cosmic-black">
-                      Featured
-                    </option>
-                    <option value="price-asc" className="bg-cosmic-black">
-                      Price: Low to High
-                    </option>
-                    <option value="price-desc" className="bg-cosmic-black">
-                      Price: High to Low
-                    </option>
-                  </select>
-                </form>
-              </div>
+              <SortDropdown />
             </div>
 
-            {/* Grid Component */}
+            <ActiveFilters />
             <ProductGrid products={formattedProducts} />
+            <Pagination totalPages={totalPages} currentPage={page} />
           </main>
         </div>
       </div>

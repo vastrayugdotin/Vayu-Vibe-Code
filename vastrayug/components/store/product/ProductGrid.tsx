@@ -1,10 +1,12 @@
 import ProductCard from "./ProductCard";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 interface ProductGridProps {
-  products: any[]; // We'll refine this type later when integrating Prisma
+  products: any[];
   title?: string;
   subtitle?: string;
   viewAllLink?: string;
+  columns?: 3 | 4;
 }
 
 export default function ProductGrid({
@@ -12,14 +14,14 @@ export default function ProductGrid({
   title,
   subtitle,
   viewAllLink,
+  columns = 3,
 }: ProductGridProps) {
   if (!products || products.length === 0) {
     return (
-      <div className="flex h-64 items-center justify-center border border-dashed border-white/10 py-12">
-        <p className="font-body text-eclipse-silver">
-          No products found matching your cosmic alignment.
-        </p>
-      </div>
+      <EmptyState
+        title="No products found"
+        message="No products found matching your cosmic alignment."
+      />
     );
   }
 
@@ -55,13 +57,16 @@ export default function ProductGrid({
 
       {/* Grid */}
       <div
-        className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:gap-8 lg:grid-cols-3 xl:grid-cols-3"
+        className={
+          columns === 4
+            ? "grid grid-cols-1 gap-6 sm:grid-cols-2 md:gap-8 lg:grid-cols-3 xl:grid-cols-4"
+            : "grid grid-cols-1 gap-6 sm:grid-cols-2 md:gap-8 lg:grid-cols-3"
+        }
         data-gtm-action="view_item_list"
       >
         {products.map((product, index) => (
           <div key={product.id} className="h-full">
-            {/* Pass priority=true to the first row of cards for LCP optimization */}
-            <ProductCard product={product} priority={index < 4} />
+            <ProductCard product={product} priority={index < columns} />
           </div>
         ))}
       </div>

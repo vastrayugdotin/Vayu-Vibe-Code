@@ -2,8 +2,12 @@ import { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import ProductGrid from "@/components/store/product/ProductGrid";
+import FilterSidebar from "@/components/store/product/FilterSidebar";
+import ActiveFilters from "@/components/store/product/ActiveFilters";
+import SortDropdown from "@/components/store/product/SortDropdown";
+import Pagination from "@/components/store/product/Pagination";
 
-export const revalidate = 300; // ISR: Revalidate every 5 minutes
+export const revalidate = 300;
 
 export async function generateStaticParams() {
   const categories = await prisma.category.findMany({
@@ -23,37 +27,19 @@ export async function generateMetadata({
     where: { slug: params.slug },
   });
 
-  if (!category) {
-    return { title: "Category Not Found | Vastrayug" };
-  }
+  if (!category) return { title: "Category Not Found | Vastrayug" };
 
-  const title =
-    category.metaTitle || `${category.name} | Cosmic Apparel | Vastrayug`;
-  const description =
-    category.metaDescription ||
-    category.description ||
-    `Shop the premium ${category.name} collection at Vastrayug. Cosmic-inspired fashion blending astrology and luxury.`;
-
+  const title = category.metaTitle || `${category.name} | Cosmic Apparel | Vastrayug`;
   return {
     title,
-    description,
-    alternates: {
-      canonical: `https://vastrayug.in/category/${category.slug}`,
-    },
+    description: category.metaDescription || category.description || `Shop the premium ${category.name} collection at Vastrayug.`,
+    alternates: { canonical: `https://vastrayug.in/category/${category.slug}` },
     openGraph: {
       title,
-      description,
+      description: category.metaDescription || category.description,
       url: `https://vastrayug.in/category/${category.slug}`,
       type: "website",
-      ...(category.imageUrl && {
-        images: [{ url: category.imageUrl, alt: category.name }],
-      }),
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-      ...(category.imageUrl && { images: [category.imageUrl] }),
+      ...(category.imageUrl && { images: [{ url: category.imageUrl, alt: category.name }] }),
     },
   };
 }
@@ -69,39 +55,60 @@ export default async function CategoryPage({
     where: { slug: params.slug },
   });
 
-  if (!category) {
-    notFound();
-  }
+  if (!category) notFound();
 
-  // Parse search parameters
-  const planetFilter = searchParams.planet as string | undefined;
-  const sortParam = searchParams.sort as string | undefined;
+  // --- Parse Parameters ---
+  const page = Number(searchParams.page) || 1;
+  const pageSize = 12;
 
-  // Construct prisma where clause
-  const whereClause: any = {
+  const planets = (searchParams.planet as string)?.split(",") || [];
+  const zodiacs = (searchParams.zodiac as string)?.split(",") || [];
+  const sizes = (searchParams.size as string)?.split(",") || [];
+  const minPrice = Number(searchParams.minPrice) || 0;
+  const maxPrice = Number(searchParams.maxPrice) || 100000;
+  const sort = (searchParams.sort as string) || "newest";
+
+  // --- Build Prisma Query ---
+  const where: any = {
     status: "PUBLISHED",
     categoryId: category.id,
+    price: { gte: minPrice, lte: maxPrice },
   };
-  if (planetFilter) whereClause.planet = planetFilter;
 
-  // Construct prisma order clause
-  let orderByClause: any = { createdAt: "desc" };
-  if (sortParam === "price-asc") orderByClause = { price: "asc" };
-  if (sortParam === "price-desc") orderByClause = { price: "desc" };
-  if (sortParam === "featured") orderByClause = { featured: "desc" };
+  if (planets.length > 0) where.planet = { in: planets.map(p => p.toUpperCase()) };
+  if (zodiacs.length > 0) where.zodiacSign = { in: zodiacs.map(z => z.toUpperCase()) };
 
-  // Fetch filtered category products
-  const products = await prisma.product.findMany({
-    where: whereClause,
-    orderBy: orderByClause,
-    include: {
-      images: {
-        where: { isPrimary: true },
-        take: 1,
+  if (sizes.length > 0) {
+    where.variants = {
+      some: {
+        size: { in: sizes },
+        isActive: true,
+      }
+    };
+  }
+
+  let orderBy: any = { createdAt: "desc" };
+  if (sort === "price-asc") orderBy = { price: "asc" };
+  if (sort === "price-desc") orderBy = { price: "desc" };
+  if (sort === "popularity") orderBy = { orderItems: { _count: "desc" } };
+
+  // --- Fetch Data ---
+  const [products, totalCount] = await Promise.all([
+    prisma.product.findMany({
+      where,
+      orderBy,
+      include: {
+        images: { orderBy: { sortOrder: "asc" } },
+        category: true,
+        collections: { include: { collection: true }, take: 1 },
       },
-      category: true,
-    },
-  });
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }),
+    prisma.product.count({ where }),
+  ]);
+
+  const totalPages = Math.ceil(totalCount / pageSize);
 
   // Format products for ProductCard
   const formattedProducts = products.map((p) => ({
@@ -117,39 +124,15 @@ export default async function CategoryPage({
       name: p.category?.name || "Uncategorized",
       slug: p.category?.slug || "uncategorized",
     },
+    collection_name: p.collections[0]?.collection.name,
   }));
 
   // Structured Data
-  const jsonLdBreadcrumb = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: [
-      {
-        "@type": "ListItem",
-        position: 1,
-        name: "Home",
-        item: "https://vastrayug.in",
-      },
-      {
-        "@type": "ListItem",
-        position: 2,
-        name: "Shop",
-        item: "https://vastrayug.in/shop",
-      },
-      {
-        "@type": "ListItem",
-        position: 3,
-        name: category.name,
-        item: `https://vastrayug.in/category/${category.slug}`,
-      },
-    ],
-  };
-
-  const jsonLdItemList = {
+  const jsonLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
     name: category.name,
-    description: category.description || `Products in ${category.name}`,
+    description: category.description,
     url: `https://vastrayug.in/category/${category.slug}`,
     itemListElement: formattedProducts.map((product, idx) => ({
       "@type": "ListItem",
@@ -162,146 +145,33 @@ export default async function CategoryPage({
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumb) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdItemList) }}
-      />
-
       <div className="container mx-auto max-w-7xl px-4 py-8 md:py-12">
         {/* Header */}
         <div className="mx-auto mb-12 max-w-3xl text-center">
           <h1 className="mb-4 font-heading text-display-sm text-stardust-white md:text-display-md">
             {category.name}
           </h1>
-          {category.description ? (
-            <p className="font-body text-lg text-eclipse-silver">
-              {category.description}
-            </p>
-          ) : (
-            <p className="font-body text-lg text-eclipse-silver">
-              Explore our premium collection of {category.name.toLowerCase()}{" "}
-              aligned with your cosmic frequency.
-            </p>
-          )}
+          <p className="font-body text-lg text-eclipse-silver leading-relaxed">
+            {category.description || `Explore our premium collection of ${category.name.toLowerCase()} aligned with your cosmic frequency.`}
+          </p>
         </div>
 
-        <div className="flex flex-col gap-8 lg:flex-row">
-          {/* Sidebar Filters */}
-          <aside className="w-full flex-shrink-0 lg:w-64">
-            <div className="sticky top-24 border border-white/5 bg-void-black p-6">
-              <div className="mb-6 flex items-center justify-between">
-                <h2 className="font-heading text-xl uppercase tracking-widest text-stardust-white">
-                  Filters
-                </h2>
-                <a
-                  href={`/category/${category.slug}`}
-                  className="font-body text-xs uppercase tracking-widest text-eclipse-silver underline underline-offset-4 hover:text-nebula-gold"
-                >
-                  Clear
-                </a>
-              </div>
+        <div className="flex flex-col gap-10 lg:flex-row">
+          <FilterSidebar />
 
-              <div className="space-y-8 font-body">
-                {/* Planets Filter */}
-                <div>
-                  <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-stardust-white">
-                    Ruling Planet
-                  </h3>
-                  <div className="space-y-3">
-                    {[
-                      "SUN",
-                      "MOON",
-                      "MARS",
-                      "MERCURY",
-                      "JUPITER",
-                      "VENUS",
-                      "SATURN",
-                      "RAHU",
-                      "KETU",
-                    ].map((planet) => {
-                      const isActive = planetFilter === planet;
-                      return (
-                        <a
-                          key={planet}
-                          href={`/category/${
-                            category.slug
-                          }?${new URLSearchParams({
-                            ...(sortParam && { sort: sortParam }),
-                            planet,
-                          }).toString()}`}
-                          className="group flex cursor-pointer items-center gap-3"
-                        >
-                          <div
-                            className={`flex h-4 w-4 items-center justify-center border transition-colors ${
-                              isActive
-                                ? "border-nebula-gold bg-nebula-gold"
-                                : "border-white/20 group-hover:border-nebula-gold"
-                            }`}
-                          >
-                            {isActive && (
-                              <span className="block h-2 w-2 bg-cosmic-black" />
-                            )}
-                          </div>
-                          <span
-                            className={`text-sm transition-colors ${
-                              isActive
-                                ? "text-stardust-white"
-                                : "text-eclipse-silver group-hover:text-stardust-white"
-                            }`}
-                          >
-                            {planet.charAt(0) + planet.slice(1).toLowerCase()}
-                          </span>
-                        </a>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </aside>
-
-          {/* Product Grid */}
           <main className="flex-1">
-            {/* Toolbar */}
-            <div className="mb-6 flex items-center justify-between border-b border-white/5 pb-4">
+            <div className="mb-8 flex flex-col justify-between gap-4 border-b border-white/5 pb-6 md:flex-row md:items-center">
               <span className="font-body text-sm text-eclipse-silver">
-                Showing {products.length} products
+                Showing <span className="text-stardust-white font-medium">{formattedProducts.length}</span> of {totalCount} results
               </span>
-              <div className="flex items-center gap-2">
-                <span className="font-body text-sm uppercase tracking-wider text-eclipse-silver">
-                  Sort by:
-                </span>
-                <form action={`/category/${category.slug}`} method="GET">
-                  {planetFilter && (
-                    <input type="hidden" name="planet" value={planetFilter} />
-                  )}
-                  <select
-                    name="sort"
-                    defaultValue={sortParam || "newest"}
-                    onChange={(e) => e.target.form?.submit()}
-                    className="cursor-pointer border-none bg-transparent font-body text-sm uppercase tracking-wider text-stardust-white outline-none focus:ring-0"
-                  >
-                    <option value="newest" className="bg-cosmic-black">
-                      Newest Arrivals
-                    </option>
-                    <option value="featured" className="bg-cosmic-black">
-                      Featured
-                    </option>
-                    <option value="price-asc" className="bg-cosmic-black">
-                      Price: Low to High
-                    </option>
-                    <option value="price-desc" className="bg-cosmic-black">
-                      Price: High to Low
-                    </option>
-                  </select>
-                </form>
-              </div>
+              <SortDropdown />
             </div>
 
-            {/* Grid Component */}
+            <ActiveFilters />
             <ProductGrid products={formattedProducts} />
+            <Pagination totalPages={totalPages} currentPage={page} />
           </main>
         </div>
       </div>

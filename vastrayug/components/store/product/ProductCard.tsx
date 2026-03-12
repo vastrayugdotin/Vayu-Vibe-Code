@@ -1,7 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import { Heart } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+import { pushEcommerceEvent } from "@/lib/datalayer";
 
 interface ProductCardProps {
   product: {
@@ -14,9 +17,10 @@ interface ProductCardProps {
     category: { name: string; slug: string };
     planet?: string | null;
     zodiac_sign?: string | null;
+    collection_name?: string | null;
     stock: number;
   };
-  priority?: boolean; // For LCP optimization on first few cards
+  priority?: boolean;
 }
 
 export default function ProductCard({
@@ -40,11 +44,26 @@ export default function ProductCard({
     : null;
   const hasDiscount = compareAtPrice && compareAtPrice > price;
 
-  // Calculate discount percentage
   const discountPercentage =
     hasDiscount && compareAtPrice
       ? Math.round(((compareAtPrice - price) / compareAtPrice) * 100)
       : 0;
+
+  function handleSelectItem() {
+    pushEcommerceEvent("select_item", {
+      items: [
+        {
+          item_id: product.id,
+          item_name: product.title,
+          item_category: product.category.name,
+          price,
+          item_planet: product.planet ?? undefined,
+          item_zodiac: product.zodiac_sign ?? undefined,
+          item_collection: product.collection_name ?? undefined,
+        },
+      ],
+    });
+  }
 
   return (
     <div
@@ -53,7 +72,11 @@ export default function ProductCard({
       data-product-name={product.title}
       data-product-category={product.category.name}
       data-product-price={price}
+      data-product-planet={product.planet ?? undefined}
+      data-product-collection={product.collection_name ?? undefined}
       data-gtm-action="select_item"
+      data-gtm-category="product"
+      data-gtm-label={product.title}
     >
       {/* Badges */}
       <div className="absolute left-3 top-3 z-20 flex flex-col gap-2">
@@ -83,9 +106,10 @@ export default function ProductCard({
         <Heart className="h-4 w-4" />
       </button>
 
-      {/* Image Gallery */}
+      {/* Image + Navigation */}
       <Link
         href={`/shop/${product.slug}`}
+        onClick={handleSelectItem}
         className="relative block w-full overflow-hidden bg-deep-indigo/30 aspect-[3/4]"
       >
         {primaryImage ? (
@@ -124,6 +148,14 @@ export default function ProductCard({
           <button
             className="w-full bg-nebula-gold py-3 font-body text-sm font-semibold uppercase tracking-widest text-cosmic-black transition-colors hover:bg-stardust-white disabled:bg-eclipse-silver disabled:text-stardust-white"
             disabled={isOutOfStock}
+            data-gtm-action="add_to_cart"
+            data-gtm-category="cart"
+            data-gtm-label={product.title}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              // TODO: wire to cart store in Phase 1
+            }}
           >
             {isOutOfStock ? "Out of Stock" : "Quick Add"}
           </button>
@@ -135,6 +167,7 @@ export default function ProductCard({
         <div className="mb-2 flex items-start justify-between gap-4">
           <Link
             href={`/shop/${product.slug}`}
+            onClick={handleSelectItem}
             className="flex-1 transition-colors hover:text-nebula-gold"
           >
             <h3 className="line-clamp-2 font-heading text-lg leading-tight text-stardust-white">

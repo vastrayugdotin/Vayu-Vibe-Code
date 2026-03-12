@@ -3,6 +3,13 @@
 import * as React from "react";
 import { Heart, Truck, RefreshCcw, ShieldCheck } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+import {
+  pushEcommerceEvent,
+  pushPixelEvent,
+  buildGa4Item,
+} from "@/lib/datalayer";
+import { useCartStore } from "@/store/cartStore";
+import { useUIStore } from "@/store/uiStore";
 
 interface ProductInfoProps {
   product: any;
@@ -17,34 +24,22 @@ export default function ProductInfo({ product, variants }: ProductInfoProps) {
 
   // DataLayer mapping
   React.useEffect(() => {
-    // Fire "view_item" event when this component mounts via DataLayer if window.dataLayer exists
-    if (typeof window !== "undefined" && (window as any).dataLayer) {
-      (window as any).dataLayer.push({
-        event: "view_item",
-        ecommerce: {
-          items: [
-            {
-              item_id: product.id,
-              item_name: product.title,
-              price: product.price,
-              item_category: product.category?.name || "",
-            },
-          ],
-        },
-      });
-    }
+    // Fire "view_item" event
+    pushEcommerceEvent("view_item", {
+      currency: "INR",
+      value: Number(product.price),
+      items: [buildGa4Item(product)],
+    });
 
-    // Fire Meta pixel event using standard fbq if exists
-    if (typeof window !== "undefined" && (window as any).fbq) {
-      (window as any).fbq("track", "ViewContent", {
-        content_name: product.title,
-        content_category: product.category?.name || "",
-        content_ids: [product.id],
-        content_type: "product",
-        value: product.price,
-        currency: "INR",
-      });
-    }
+    // Fire Meta pixel event
+    pushPixelEvent("ViewContent", {
+      content_name: product.title,
+      content_category: product.category?.name || "",
+      content_ids: [product.id],
+      content_type: "product",
+      value: Number(product.price),
+      currency: "INR",
+    });
   }, [product]);
 
   const hasDiscount =
@@ -58,26 +53,46 @@ export default function ProductInfo({ product, variants }: ProductInfoProps) {
       return;
     }
 
-    if (typeof window !== "undefined" && (window as any).dataLayer) {
-      (window as any).dataLayer.push({
-        event: "add_to_cart",
-        ecommerce: {
-          items: [
-            {
-              item_id: product.id,
-              item_name: product.title,
-              price: selectedVariant.priceOverride || product.price,
-              item_category: product.category?.name || "",
-              item_variant: selectedVariant.size,
-              quantity: 1,
-            },
-          ],
-        },
-      });
-    }
+    const price = Number(selectedVariant.priceOverride || product.price);
 
-    // TODO: implement global Zustand cart connection here. Phase 4.
-    alert(`Added ${product.title} (Size: ${selectedVariant.size}) to cart!`);
+    pushEcommerceEvent("add_to_cart", {
+      currency: "INR",
+      value: price,
+      items: [
+        {
+          ...buildGa4Item(product, {
+            size: selectedVariant.size,
+            colour: selectedVariant.colour,
+            priceOverride: selectedVariant.priceOverride,
+          }),
+          quantity: 1,
+        },
+      ],
+    });
+
+    // Fire Meta AddToCart
+    pushPixelEvent("AddToCart", {
+      content_ids: [product.id],
+      content_type: "product",
+      value: price,
+      currency: "INR",
+    });
+
+    // Add to Zustand Store
+    addItem({
+      productId: product.id,
+      title: product.title,
+      price: price,
+      quantity: 1,
+      image: product.images[0]?.url,
+      variant: {
+        size: selectedVariant.size,
+        color: selectedVariant.colour || undefined,
+      },
+    });
+
+    // Open MiniCart drawer
+    openMiniCart();
   };
 
   const displayPrice = selectedVariant?.priceOverride || product.price;

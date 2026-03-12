@@ -6,6 +6,8 @@ import { usePathname } from "next/navigation";
 import { Menu, X, Search, ShoppingBag, User, Heart } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 import { useCartStore } from "@/store/cartStore";
+import { useUIStore } from "@/store/uiStore";
+import MiniCart from "../cart/MiniCart";
 
 const NAV_LINKS = [
   { href: "/shop", label: "Shop" },
@@ -21,6 +23,7 @@ export default function Navbar() {
   // TODO: integrate with real auth and cart stores
   const { data: session } = useSession();
   const cartItemsCount = useCartStore((state) => state.getTotalItems());
+  const { isMiniCartOpen, openMiniCart, closeMiniCart } = useUIStore();
 
   // Blog toggle via env var
   const blogEnabled = process.env.NEXT_PUBLIC_BLOG_ENABLED !== "false";
@@ -145,8 +148,8 @@ export default function Navbar() {
             </div>
 
             {/* Cart Icon with Badge */}
-            <Link
-              href="/cart"
+            <button
+              onClick={openMiniCart}
               className="hover:text-nebula-gold transition-colors relative"
               aria-label="Cart"
             >
@@ -156,10 +159,12 @@ export default function Navbar() {
                   {cartItemsCount}
                 </span>
               )}
-            </Link>
+            </button>
           </div>
         </div>
       </div>
+
+      <MiniCart isOpen={isMiniCartOpen} onClose={closeMiniCart} />
 
       {/* Mobile Slide-out Drawer */}
       <div

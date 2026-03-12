@@ -78,3 +78,12 @@ export const announcementBarSchema = z
   );
 
 export type AnnouncementBarInput = z.infer<typeof announcementBarSchema>;
+
+// ── Newsletter (§4.7) ────────────────────────────────────────
+
+export const newsletterSchema = z.object({
+  email: z.string().email("Invalid cosmic coordinates (email address)"),
+  source: z.string().optional().default("footer"),
+});
+
+export type NewsletterInput = z.infer<typeof newsletterSchema>;
